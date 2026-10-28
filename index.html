@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>html{-webkit-text-size-adjust:100%}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Jadwal Training Zahir</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: halaman tunggal bertema gelap teal. Judul + tombol Buat Jadwal, empat kartu ringkasan, panel filter, lalu daftar kartu jadwal. Form dan detail muncul sebagai jendela pop-up di atas halaman. */
+:root {
+  --bg: #071f27;
+  --surface: #0b2e38;
+  --surface2: #0f3a46;
+  --field: #06242c;
+  --line: #1b4d59;
+  --ink: #e7f3f3;
+  --muted: #82aab0;
+  --accent: #2b9fc4;
+  --accent-ink: #04202a;
+  --save: #12a074;
+  --save-ink: #ffffff;
+  --sel-bg: #4a1d00;
+  --sel-line: #f59f1c;
+  --sel-ink: #ffb347;
+  --good: #28c27a;
+  --violet: #8e7cf0;
+  --amber: #f5a524;
+  --danger: #ff8f84;
+  --chip-bg: #0a3b2f;
+  --chip-ink: #2bd18a;
+  --scrim: rgba(2, 12, 16, 0.74);
+  --font-display: "Outfit", "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-body: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #eef6f7; --surface: #ffffff; --surface2: #e3f0f2; --field: #f6fbfc; --line: #c3dadd;
+    --ink: #0d2a31; --muted: #4f747b; --accent: #0b7ea1; --accent-ink: #ffffff;
+    --save: #0b8a63; --sel-bg: #ffedd5; --sel-line: #d97706; --sel-ink: #9a4a00;
+    --good: #0b8a63; --violet: #5b4bd1; --amber: #b45309; --danger: #b42318;
+    --chip-bg: #d5f2e6; --chip-ink: #0b6b4a; --scrim: rgba(7, 31, 39, 0.5);
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #eef6f7; --surface: #ffffff; --surface2: #e3f0f2; --field: #f6fbfc; --line: #c3dadd;
+  --ink: #0d2a31; --muted: #4f747b; --accent: #0b7ea1; --accent-ink: #ffffff;
+  --save: #0b8a63; --sel-bg: #ffedd5; --sel-line: #d97706; --sel-ink: #9a4a00;
+  --good: #0b8a63; --violet: #5b4bd1; --amber: #b45309; --danger: #b42318;
+  --chip-bg: #d5f2e6; --chip-ink: #0b6b4a; --scrim: rgba(7, 31, 39, 0.5);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-block: 32px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  font-variant-numeric: tabular-nums;
+}
+body.locked { overflow: hidden; }
+.page { max-width: 1100px; margin: 0 auto; display: grid; gap: 20px; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, .card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 14px 20px; }
+h1 { font-family: var(--font-display); font-size: clamp(28px, 5vw, 40px); line-height: 1.1; margin: 0; letter-spacing: -0.01em; display: flex; align-items: center; gap: 12px; }
+h1 svg { width: 38px; height: 38px; color: var(--violet); flex: none; }
+.sub { color: var(--muted); margin: 6px 0 0; }
+.store { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+.store i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
+.store.ok i { background: var(--good); }
+.btn-new { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 8px; padding: 11px 20px; font-weight: 600; cursor: pointer; }
+.btn-new:hover { filter: brightness(1.1); }
+
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; display: grid; gap: 2px; }
+.stat svg { width: 26px; height: 26px; margin-bottom: 6px; }
+.stat b { font-family: var(--font-display); font-size: 32px; line-height: 1.1; font-weight: 700; overflow-wrap: anywhere; }
+.stat span { color: var(--muted); font-size: 14px; }
+.stat.s1 svg, .stat.s1 b { color: var(--accent); }
+.stat.s2 svg, .stat.s2 b { color: var(--violet); }
+.stat.s3 svg, .stat.s3 b { color: var(--good); }
+.stat.s4 svg, .stat.s4 b { color: var(--amber); }
+.stat.s4 b { font-size: 24px; padding-top: 6px; }
+
+.filters { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; display: grid; gap: 14px; }
+.frow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.fld { display: grid; gap: 4px; min-width: 0; }
+.fld > label, .lbl { font-size: 13px; color: var(--muted); }
+input, select, textarea { background: var(--field); border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; width: 100%; min-width: 0; }
+input::placeholder, textarea::placeholder { color: var(--muted); opacity: 0.75; }
+textarea { resize: vertical; min-height: 68px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px 8px; align-items: center; }
+.chips .sep { width: 1px; align-self: stretch; background: var(--line); margin: 0 6px; }
+.chip-btn { background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; font-size: 13.5px; font-weight: 500; color: var(--muted); cursor: pointer; }
+.chip-btn:hover { color: var(--ink); border-color: var(--muted); }
+.chip-btn[aria-pressed="true"] { color: var(--ink); border-color: var(--ink); font-weight: 600; background: var(--surface2); }
+.count { font-size: 13.5px; color: var(--muted); }
+.count b { color: var(--accent); font-weight: 600; }
+
+.cards { display: grid; gap: 12px; }
+.card {
+  display: grid; grid-template-columns: 62px minmax(0, 1fr) auto; gap: 14px 16px; align-items: start; text-align: left; width: 100%;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; cursor: pointer;
+}
+.card:hover { border-color: var(--accent); }
+.card.today { border-color: var(--amber); }
+.dbox { width: 62px; height: 62px; border-radius: 12px; background: var(--surface2); display: grid; place-content: center; text-align: center; line-height: 1; }
+.dbox b { font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--good); }
+.dbox span { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-top: 4px; }
+.cbody { min-width: 0; display: grid; gap: 4px; }
+.ctitle { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.ctitle strong { font-family: var(--font-display); font-size: 18px; font-weight: 600; overflow-wrap: anywhere; }
+.tag { font-size: 12.5px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: var(--chip-bg); color: var(--chip-ink); white-space: nowrap; }
+.tag.today { background: var(--sel-bg); color: var(--sel-ink); }
+.meta { display: flex; flex-wrap: wrap; gap: 2px 14px; color: var(--muted); font-size: 14px; }
+.meta span { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.meta svg { width: 15px; height: 15px; flex: none; }
+.meta .cost { color: var(--amber); font-weight: 600; }
+.line { color: var(--muted); font-size: 14px; overflow-wrap: anywhere; }
+.line b { color: var(--ink); font-weight: 500; }
+.more { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
+.empty { border: 1px dashed var(--line); border-radius: 14px; padding: 40px 20px; text-align: center; color: var(--muted); }
+.empty strong { display: block; font-family: var(--font-display); font-size: 19px; color: var(--ink); margin-bottom: 4px; }
+
+/* pop-up */
+.overlay { position: fixed; inset: 0; z-index: 20; background: var(--scrim); overflow-y: auto; display: flex; padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.dlg { background: var(--bg); border: 1px solid var(--line); border-radius: 16px; width: 100%; max-width: 780px; margin: auto; padding: 24px 26px 26px; }
+.dhead { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; }
+.dhead h2 { font-family: var(--font-display); font-size: 22px; margin: 0; display: flex; align-items: center; gap: 10px; }
+.dhead h2 svg { width: 22px; height: 22px; color: var(--violet); }
+.x { background: transparent; border: 0; color: var(--muted); font-size: 30px; line-height: 1; cursor: pointer; padding: 0 6px; border-radius: 6px; }
+.x:hover { color: var(--ink); }
+form { display: grid; gap: 14px; }
+.top2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px 22px; align-items: start; }
+.t3 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin-top: 12px; }
+.dur { display: grid; grid-template-columns: minmax(0, 1fr) 84px; gap: 8px; }
+.vers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 4px; }
+.vbtn { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 9px 8px; font-size: 13.5px; font-weight: 600; color: var(--muted); cursor: pointer; }
+.vbtn:hover { color: var(--ink); }
+.vbtn[aria-pressed="true"] { background: var(--sel-bg); border-color: var(--sel-line); color: var(--sel-ink); }
+.group { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px 16px; display: grid; gap: 10px; }
+.group > .gt { font-weight: 600; font-size: 14.5px; }
+.group .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.money { display: grid; grid-template-columns: 46px minmax(0, 1fr); }
+.money span { display: grid; place-items: center; background: var(--surface2); color: var(--amber); font-weight: 600; font-size: 13px; border: 1px solid var(--line); border-right: 0; border-radius: 8px 0 0 8px; }
+.money input { border-radius: 0 8px 8px 0; }
+.fh { font-size: 12.5px; color: var(--muted); }
+.msg { color: var(--danger); font-size: 14px; margin: 0; min-height: 20px; }
+.btns { display: flex; flex-wrap: wrap; gap: 10px; }
+.b-save { background: var(--save); color: var(--save-ink); border: 0; border-radius: 10px; padding: 11px 24px; font-weight: 600; cursor: pointer; }
+.b-save:hover { filter: brightness(1.1); }
+.b-save:disabled { opacity: 0.6; cursor: default; }
+.b-line { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 10px; padding: 11px 24px; font-weight: 600; cursor: pointer; }
+.b-line:hover { color: var(--ink); border-color: var(--muted); }
+.b-del { background: transparent; border: 1px solid var(--danger); color: var(--danger); border-radius: 10px; padding: 11px 20px; font-weight: 600; cursor: pointer; }
+.b-delyes { background: var(--danger); border: 1px solid var(--danger); color: #1a0a08; border-radius: 10px; padding: 11px 20px; font-weight: 600; cursor: pointer; }
+.dl { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 0; margin: 0 0 20px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); }
+.dl dt, .dl dd { margin: 0; padding: 10px 14px; border-top: 1px solid var(--line); }
+.dl dt:first-of-type, .dl dd:first-of-type { border-top: 0; }
+.dl dt { color: var(--muted); font-size: 13.5px; }
+.dl dd { overflow-wrap: anywhere; user-select: text; }
+.dl dd.cost { color: var(--amber); font-weight: 600; }
+.askdel { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.askdel span { color: var(--danger); font-weight: 600; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: max(20px, env(safe-area-inset-bottom, 0px)); z-index: 30; background: var(--save); color: var(--save-ink); padding: 10px 18px; border-radius: 999px; font-weight: 600; font-size: 14px; box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+
+@media (max-width: 860px) {
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .frow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .top2, .t3, .group .two { grid-template-columns: minmax(0, 1fr); }
+  .dlg { padding: 18px 16px 20px; }
+  .card { grid-template-columns: 52px minmax(0, 1fr); }
+  .dbox { width: 52px; height: 52px; }
+  .more { display: none; }
+  .dl { grid-template-columns: 112px minmax(0, 1fr); }
+  .chips .sep { display: none; }
+}
+@media (max-width: 420px) { .frow { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: no-preference) { .card, .chip-btn, .vbtn, button { transition: border-color 0.15s, background 0.15s, color 0.15s, filter 0.15s; } }
+</style>
+
+</head>
+<body>
+<div class="page">
+  <div class="top">
+    <div>
+      <h1><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>Jadwal Training</h1>
+      <p class="sub">Training Zahir ke client: trainer, waktu, lokasi, kontak, dan biaya transport.</p>
+      <span class="store" id="store"><i></i><span id="storeText">Menghubungkan…</span></span>
+    </div>
+    <button class="btn-new" type="button" id="openNew">+ Buat Jadwal</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat s1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></svg><b id="stTotal">0</b><span>Total Jadwal</span></div>
+    <div class="stat s2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><b id="stMonth">0</b><span>Bulan Ini</span></div>
+    <div class="stat s3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><b id="stUp">0</b><span>Mendatang</span></div>
+    <div class="stat s4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h15a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h11"/><circle cx="16" cy="13.5" r="1.2"/></svg><b id="stCost">Rp 0</b><span>Transport Bulan Ini</span></div>
+  </div>
+
+  <section class="filters" aria-label="Filter jadwal">
+    <div class="frow">
+      <div class="fld"><label for="fFrom">Dari tanggal</label><input id="fFrom" type="date"></div>
+      <div class="fld"><label for="fTo">Sampai tanggal</label><input id="fTo" type="date"></div>
+      <div class="fld"><label for="fTrainer">Trainer</label><select id="fTrainer"><option value="">Semua</option></select></div>
+      <div class="fld"><label for="fQ">Cari perusahaan / kontak</label><input id="fQ" type="search" placeholder="Ketik nama…" autocomplete="off"></div>
+    </div>
+    <div class="chips" id="chips" role="group" aria-label="Versi Zahir dan status"></div>
+    <div class="count" id="count"></div>
+  </section>
+
+  <div class="cards" id="list"></div>
+</div>
+
+<div class="overlay" id="overlay" hidden>
+  <!-- form -->
+  <div class="dlg" id="dlgForm" role="dialog" aria-modal="true" aria-labelledby="formTitle" hidden>
+    <div class="dhead">
+      <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span id="formTitle">Buat Jadwal Baru</span></h2>
+      <button class="x" type="button" data-close aria-label="Tutup">×</button>
+    </div>
+    <form id="form" novalidate>
+      <div class="top2">
+        <div>
+          <div class="fld"><label for="date">Tanggal *</label><input id="date" type="date" required></div>
+          <div class="t3">
+            <div class="fld"><label for="time">Jam mulai *</label><input id="time" type="time" value="09:00" required></div>
+            <div class="fld"><label for="durValue">Lama training *</label>
+              <div class="dur"><input id="durValue" type="number" min="0.5" step="0.5" value="3" required><select id="durUnit" aria-label="Satuan lama training"><option>jam</option><option>hari</option></select></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <span class="lbl" id="verLbl">Versi Zahir *</span>
+          <div class="vers" id="vers" role="group" aria-labelledby="verLbl"></div>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="gt">Perusahaan *</div>
+        <input id="company" list="companyList" placeholder="Nama perusahaan" autocomplete="off" required>
+        <datalist id="companyList"></datalist>
+        <div class="fld"><label for="address">Alamat perusahaan *</label><textarea id="address" placeholder="Alamat lengkap lokasi training…" required></textarea></div>
+        <div class="two">
+          <div class="fld"><label for="contact">Kontak person client *</label><input id="contact" placeholder="Nama PIC" autocomplete="off" required></div>
+          <div class="fld"><label for="phone">No. telepon *</label><input id="phone" type="tel" inputmode="tel" placeholder="08xx-xxxx-xxxx" autocomplete="off" required></div>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="two">
+          <div class="fld"><label for="trainer">Nama trainer *</label><input id="trainer" list="trainerList" placeholder="Nama trainer" autocomplete="off" required><datalist id="trainerList"></datalist></div>
+          <div class="fld"><label for="transport">Biaya transport</label>
+            <div class="money"><span>Rp</span><input id="transport" type="number" inputmode="numeric" min="0" step="1000" value="0"></div>
+            <span class="fh">Isi 0 bila tidak ada.</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="msg" id="msg" role="alert"></p>
+      <div class="btns">
+        <button class="b-save" type="submit" id="saveBtn">Simpan Jadwal</button>
+        <button class="b-line" type="button" data-close>Batal</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- detail -->
+  <div class="dlg" id="dlgDetail" role="dialog" aria-modal="true" aria-labelledby="detTitle" hidden>
+    <div class="dhead">
+      <h2 id="detTitle">Detail Jadwal</h2>
+      <button class="x" type="button" data-close aria-label="Tutup">×</button>
+    </div>
+    <dl class="dl" id="detList"></dl>
+    <div class="btns" id="detBtns"></div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(function () {
+  var LS_KEY = "jadwal-training-zahir";
+  var VERSIONS = ["Zahir Online", "Zahir Accounting 6", "Zahir Accounting 5", "Zahir Enterprise", "Lainnya"];
+  var state = { items: [], f: { from: "", to: "", trainer: "", ver: "", status: "all", q: "" }, editing: null, detailId: null, confirm: false, version: VERSIONS[0], opener: null };
+  var backend = { mode: "local", col: null };
+  var $ = function (id) { return document.getElementById(id); };
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+  function todayStr() { var d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function parseDate(s) { var p = s.split("-"); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  var MONTHS = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+  var SHORT = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+  var DAYS = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+  function fmtNum(n) { return String(n).replace(".", ","); }
+  function rupiah(n) { return "Rp " + (Math.round(+n || 0)).toLocaleString("id-ID"); }
+  function endTime(x) {
+    if (x.durUnit !== "jam") return "";
+    var p = (x.time || "00:00").split(":");
+    var m = (+p[0]) * 60 + (+p[1]) + Math.round((+x.durValue || 0) * 60);
+    m = m % 1440;
+    return pad(Math.floor(m / 60)) + ":" + pad(m % 60);
+  }
+  function timeText(x) {
+    var e = endTime(x);
+    return esc(x.time) + (e ? "–" + e : "") + " (" + esc(fmtNum(x.durValue)) + " " + esc(x.durUnit) + ")";
+  }
+
+  /* ---------- penyimpanan ---------- */
+  function loadLocal() { try { state.items = JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch (e) { state.items = []; } }
+  function saveLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify(state.items)); } catch (e) {} }
+  function setStoreLabel() {
+    var ok = backend.mode === "db";
+    $("store").className = "store" + (ok ? " ok" : "");
+    $("storeText").textContent = ok ? "Tersimpan di database, dibagi ke semua yang membuka halaman ini" : "Tersimpan di browser ini saja";
+  }
+  function newId() { return "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  async function persist(rec) {
+    if (backend.mode === "db") {
+      var data = Object.assign({}, rec); delete data.id;
+      await backend.col.doc(rec.id).set(data);
+    } else {
+      var i = state.items.findIndex(function (x) { return x.id === rec.id; });
+      if (i >= 0) state.items[i] = rec; else state.items.push(rec);
+      saveLocal(); render();
+    }
+  }
+  async function remove(id) {
+    if (backend.mode === "db") { await backend.col.doc(id).delete(); }
+    else { state.items = state.items.filter(function (x) { return x.id !== id; }); saveLocal(); render(); }
+  }
+  async function init() {
+    loadLocal();
+    var db = null;
+    try { db = window.claude && window.claude.use ? await window.claude.use("db") : null; } catch (e) { db = null; }
+    if (db) {
+      backend = { mode: "db", col: db.collection("trainings") };
+      state.items = [];
+      backend.col.onSnapshot(function (snap) {
+        state.items = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
+        render();
+        if (state.detailId) renderDetail();
+      }, function () {
+        backend = { mode: "local", col: null }; loadLocal(); setStoreLabel(); render();
+      });
+    }
+    setStoreLabel();
+    buildStatic();
+    render();
+  }
+
+  /* ---------- tampilan ---------- */
+  function buildStatic() {
+    var h = '<button type="button" class="chip-btn" data-v="">Semua versi</button>';
+    VERSIONS.forEach(function (v) { h += '<button type="button" class="chip-btn" data-v="' + esc(v) + '">' + esc(v) + "</button>"; });
+    h += '<span class="sep"></span>';
+    [["all", "Semua"], ["up", "Mendatang"], ["past", "Selesai"]].forEach(function (s) {
+      h += '<button type="button" class="chip-btn" data-s="' + s[0] + '">' + s[1] + "</button>";
+    });
+    $("chips").innerHTML = h;
+    var vb = "";
+    VERSIONS.forEach(function (v) { vb += '<button type="button" class="vbtn" data-ver="' + esc(v) + '" aria-pressed="false">' + esc(v) + "</button>"; });
+    $("vers").innerHTML = vb;
+    setVersion(state.version);
+  }
+  function setVersion(v) {
+    state.version = v;
+    document.querySelectorAll(".vbtn").forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-ver") === v ? "true" : "false"); });
+  }
+  function visible() {
+    var t = todayStr(), f = state.f, q = f.q.trim().toLowerCase();
+    var arr = state.items.filter(function (x) {
+      if (f.from && x.date < f.from) return false;
+      if (f.to && x.date > f.to) return false;
+      if (f.trainer && x.trainer !== f.trainer) return false;
+      if (f.ver && x.version !== f.ver) return false;
+      if (f.status === "up" && x.date < t) return false;
+      if (f.status === "past" && x.date >= t) return false;
+      if (!q) return true;
+      return [x.company, x.contact, x.phone, x.address, x.trainer].join(" ").toLowerCase().indexOf(q) >= 0;
+    });
+    function key(x) { return x.date + " " + (x.time || ""); }
+    var up = arr.filter(function (x) { return x.date >= t; }).sort(function (a, b) { return key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0; });
+    var past = arr.filter(function (x) { return x.date < t; }).sort(function (a, b) { return key(a) < key(b) ? 1 : key(a) > key(b) ? -1 : 0; });
+    return up.concat(past);
+  }
+  var ICO = {
+    person: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>',
+    clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+    cal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+    wallet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h15a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h11"/><circle cx="16" cy="13.5" r="1.2"/></svg>'
+  };
+  function cardHtml(x) {
+    var d = parseDate(x.date), isToday = x.date === todayStr(), cost = +x.transportCost || 0;
+    return '<button type="button" class="card' + (isToday ? " today" : "") + '" data-id="' + esc(x.id) + '">' +
+      '<div class="dbox"><b>' + d.getDate() + "</b><span>" + SHORT[d.getMonth()] + "</span></div>" +
+      '<div class="cbody">' +
+        '<div class="ctitle"><strong>' + esc(x.company) + '</strong><span class="tag">' + esc(x.version) + "</span>" + (isToday ? '<span class="tag today">Hari ini</span>' : "") + "</div>" +
+        '<div class="meta"><span>' + ICO.person + esc(x.trainer) + "</span><span>" + ICO.cal + esc(DAYS[d.getDay()]) + ", " + d.getDate() + " " + SHORT[d.getMonth()] + " " + d.getFullYear() + "</span><span>" + ICO.clock + timeText(x) + "</span>" +
+          (cost ? '<span class="cost">' + ICO.wallet + rupiah(cost) + "</span>" : "") + "</div>" +
+        '<div class="line">' + esc(x.address) + "</div>" +
+        '<div class="line">Kontak: <b>' + esc(x.contact) + "</b> · " + esc(x.phone) + "</div>" +
+      "</div>" +
+      '<span class="more">Klik untuk detail →</span></button>';
+  }
+  function uniq(arr) { return arr.filter(function (v, i) { return v && arr.indexOf(v) === i; }).sort(); }
+  function render() {
+    var t = todayStr(), ym = t.slice(0, 7);
+    var monthItems = state.items.filter(function (x) { return x.date.slice(0, 7) === ym; });
+    $("stTotal").textContent = state.items.length;
+    $("stMonth").textContent = monthItems.length;
+    $("stUp").textContent = state.items.filter(function (x) { return x.date >= t; }).length;
+    $("stCost").textContent = rupiah(monthItems.reduce(function (s, x) { return s + (+x.transportCost || 0); }, 0));
+
+    var trainers = uniq(state.items.map(function (x) { return x.trainer; }));
+    var opts = '<option value="">Semua</option>' + trainers.map(function (n) { return '<option value="' + esc(n) + '">' + esc(n) + "</option>"; }).join("");
+    if ($("fTrainer").getAttribute("data-sig") !== opts) {
+      $("fTrainer").innerHTML = opts; $("fTrainer").setAttribute("data-sig", opts);
+      $("fTrainer").value = trainers.indexOf(state.f.trainer) >= 0 ? state.f.trainer : "";
+      if ($("fTrainer").value !== state.f.trainer) state.f.trainer = "";
+    }
+    $("trainerList").innerHTML = trainers.map(function (n) { return '<option value="' + esc(n) + '">'; }).join("");
+    $("companyList").innerHTML = uniq(state.items.map(function (x) { return x.company; })).map(function (n) { return '<option value="' + esc(n) + '">'; }).join("");
+
+    document.querySelectorAll("#chips [data-v]").forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-v") === state.f.ver ? "true" : "false"); });
+    document.querySelectorAll("#chips [data-s]").forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-s") === state.f.status ? "true" : "false"); });
+
+    var arr = visible();
+    var total = arr.reduce(function (s, x) { return s + (+x.transportCost || 0); }, 0);
+    $("count").innerHTML = "Menampilkan <b>" + arr.length + "</b> jadwal · Total transport <b>" + rupiah(total) + "</b>";
+    if (!arr.length) {
+      var none = state.items.length === 0;
+      $("list").innerHTML = '<div class="empty"><strong>' + (none ? "Belum ada jadwal training" : "Tidak ada jadwal yang cocok") + "</strong>" +
+        (none ? 'Klik "+ Buat Jadwal" untuk mencatat jadwal pertama.' : "Ubah filter atau kata pencarian.") + "</div>";
+    } else {
+      $("list").innerHTML = arr.map(cardHtml).join("");
+    }
+  }
+
+  /* ---------- pop-up ---------- */
+  function openOverlay(which) {
+    state.opener = document.activeElement;
+    $("overlay").hidden = false;
+    $("dlgForm").hidden = which !== "form";
+    $("dlgDetail").hidden = which !== "detail";
+    document.body.classList.add("locked");
+    $("overlay").scrollTop = 0;
+  }
+  function closeOverlay() {
+    $("overlay").hidden = true;
+    $("dlgForm").hidden = true; $("dlgDetail").hidden = true;
+    document.body.classList.remove("locked");
+    state.detailId = null; state.confirm = false; state.editing = null;
+    if (state.opener && state.opener.focus) { try { state.opener.focus(); } catch (e) {} }
+  }
+  var toastT = null;
+  function toast(text) {
+    $("toast").textContent = text; $("toast").hidden = false;
+    clearTimeout(toastT); toastT = setTimeout(function () { $("toast").hidden = true; }, 2400);
+  }
+
+  function setMsg(t) { $("msg").textContent = t; }
+  function resetForm() {
+    $("form").reset();
+    $("time").value = "09:00"; $("durValue").value = "3"; $("transport").value = "0";
+    setVersion(VERSIONS[0]); setMsg("");
+  }
+  function openForm(x) {
+    resetForm();
+    if (x) {
+      state.editing = x.id;
+      $("formTitle").textContent = "Ubah Jadwal";
+      $("company").value = x.company; $("trainer").value = x.trainer; $("date").value = x.date; $("time").value = x.time;
+      setVersion(x.version); $("durValue").value = x.durValue; $("durUnit").value = x.durUnit;
+      $("address").value = x.address; $("contact").value = x.contact; $("phone").value = x.phone;
+      $("transport").value = +x.transportCost || 0;
+      $("saveBtn").textContent = "Simpan Perubahan";
+    } else {
+      state.editing = null;
+      $("formTitle").textContent = "Buat Jadwal Baru";
+      $("saveBtn").textContent = "Simpan Jadwal";
+    }
+    state.detailId = null;
+    openOverlay("form");
+    setTimeout(function () { $("date").focus(); }, 0);
+  }
+
+  function renderDetail() {
+    var x = state.items.find(function (i) { return i.id === state.detailId; });
+    if (!x) { if (!$("dlgDetail").hidden) closeOverlay(); return; }
+    var d = parseDate(x.date), cost = +x.transportCost || 0;
+    $("detTitle").textContent = x.company;
+    $("detList").innerHTML =
+      "<dt>Versi Zahir</dt><dd>" + esc(x.version) + "</dd>" +
+      "<dt>Tanggal</dt><dd>" + DAYS[d.getDay()] + ", " + d.getDate() + " " + MONTHS[d.getMonth()] + " " + d.getFullYear() + "</dd>" +
+      "<dt>Waktu</dt><dd>" + timeText(x) + "</dd>" +
+      "<dt>Trainer</dt><dd>" + esc(x.trainer) + "</dd>" +
+      "<dt>Alamat</dt><dd>" + esc(x.address) + "</dd>" +
+      "<dt>Kontak person</dt><dd>" + esc(x.contact) + "</dd>" +
+      "<dt>No. telepon</dt><dd>" + esc(x.phone) + "</dd>" +
+      '<dt>Biaya transport</dt><dd class="cost">' + (cost ? rupiah(cost) : "Tidak ada") + "</dd>";
+    $("detBtns").innerHTML = state.confirm
+      ? '<div class="askdel"><span>Hapus jadwal ini?</span><button class="b-delyes" type="button" data-act="del-yes">Ya, hapus</button><button class="b-line" type="button" data-act="del-no">Batal</button></div>'
+      : '<button class="b-save" type="button" data-act="edit">Ubah</button><button class="b-del" type="button" data-act="del">Hapus</button><button class="b-line" type="button" data-close>Tutup</button>';
+  }
+
+  /* ---------- event ---------- */
+  $("openNew").addEventListener("click", function () { openForm(null); });
+  $("list").addEventListener("click", function (e) {
+    var c = e.target.closest(".card"); if (!c) return;
+    state.detailId = c.getAttribute("data-id"); state.confirm = false;
+    renderDetail(); openOverlay("detail");
+  });
+  $("overlay").addEventListener("click", function (e) {
+    if (e.target === $("overlay") || e.target.closest("[data-close]")) closeOverlay();
+  });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("overlay").hidden) closeOverlay(); });
+
+  $("detBtns").addEventListener("click", async function (e) {
+    var b = e.target.closest("[data-act]"); if (!b) return;
+    var act = b.getAttribute("data-act");
+    if (act === "edit") { var x = state.items.find(function (i) { return i.id === state.detailId; }); if (x) openForm(x); }
+    else if (act === "del") { state.confirm = true; renderDetail(); }
+    else if (act === "del-no") { state.confirm = false; renderDetail(); }
+    else if (act === "del-yes") {
+      var id = state.detailId;
+      try { await remove(id); closeOverlay(); toast("Jadwal dihapus"); }
+      catch (err) { state.confirm = false; renderDetail(); }
+    }
+  });
+
+  $("vers").addEventListener("click", function (e) { var b = e.target.closest(".vbtn"); if (b) setVersion(b.getAttribute("data-ver")); });
+  $("company").addEventListener("change", function () {
+    if (state.editing) return;
+    var name = $("company").value.trim().toLowerCase();
+    var m = state.items.filter(function (x) { return x.company.toLowerCase() === name; }).sort(function (a, b) { return a.date < b.date ? 1 : -1; })[0];
+    if (!m) return;
+    if (!$("address").value.trim()) $("address").value = m.address;
+    if (!$("contact").value.trim()) $("contact").value = m.contact;
+    if (!$("phone").value.trim()) $("phone").value = m.phone;
+  });
+
+  $("form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var rec = {
+      id: state.editing || newId(),
+      company: $("company").value.trim(), trainer: $("trainer").value.trim(),
+      date: $("date").value, time: $("time").value, version: state.version,
+      durValue: parseFloat($("durValue").value), durUnit: $("durUnit").value,
+      address: $("address").value.trim(), contact: $("contact").value.trim(), phone: $("phone").value.trim(),
+      transportCost: Math.round(parseFloat($("transport").value) || 0)
+    };
+    var missing = [];
+    if (!rec.date) missing.push("tanggal");
+    if (!rec.time) missing.push("jam mulai");
+    if (!(rec.durValue > 0)) missing.push("lama training");
+    if (!rec.company) missing.push("perusahaan");
+    if (!rec.address) missing.push("alamat");
+    if (!rec.contact) missing.push("kontak person");
+    if (!rec.phone) missing.push("no. telepon");
+    if (!rec.trainer) missing.push("nama trainer");
+    if (missing.length) { setMsg("Lengkapi dulu: " + missing.join(", ") + "."); return; }
+    if (rec.transportCost < 0) { setMsg("Biaya transport tidak boleh minus."); return; }
+    $("saveBtn").disabled = true;
+    try {
+      var wasEditing = !!state.editing;
+      await persist(rec);
+      closeOverlay();
+      toast(wasEditing ? "Perubahan tersimpan" : "Jadwal tersimpan");
+    } catch (err) {
+      setMsg("Gagal menyimpan. Periksa koneksi lalu coba lagi.");
+    }
+    $("saveBtn").disabled = false;
+  });
+
+  /* filter */
+  $("fFrom").addEventListener("input", function () { state.f.from = $("fFrom").value; render(); });
+  $("fTo").addEventListener("input", function () { state.f.to = $("fTo").value; render(); });
+  $("fTrainer").addEventListener("change", function () { state.f.trainer = $("fTrainer").value; render(); });
+  $("fQ").addEventListener("input", function () { state.f.q = $("fQ").value; render(); });
+  $("chips").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    if (b.hasAttribute("data-v")) state.f.ver = b.getAttribute("data-v");
+    if (b.hasAttribute("data-s")) state.f.status = b.getAttribute("data-s");
+    render();
+  });
+
+  init();
+})();
+</script>
+</body>
+</html>
