@@ -1,8 +1,9 @@
 window.FIREBASE_CONFIG = {
-  apiKey: "AIza...",
+  apiKey: "AIzaSyCgOvpM9wZDK_xvXnWcJiSEXtyKXKHXewU",
   authDomain: "zahir-onboarding.firebaseapp.com",
-  projectId: "zahir-onboarding",
-  storageBucket: "zahir-onboarding.appspot.com",
-  messagingSenderId: "1234567890",
-  appId: "1:1234567890:web:abcdef123456"
+  projectId: "zahir-onboardin",
+  storageBucket: "zahir-onboardin.firebasestorage.app",
+  messagingSenderId: "317740179643",
+  appId: "1:317740179643:web:dbec20752ebbaadec9899e",
+  measurementId: "G-0WYMCN2DEE"
 };
