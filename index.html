@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>html{-webkit-text-size-adjust:100%}body{margin:0}img{max-width:100%}</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
 <title>Jadwal Training Zahir</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap">
 <style>
@@ -608,7 +612,7 @@ form { display: grid; gap: 14px; }
   function setStoreLabel() {
     var ok = backend.mode === "db";
     $("store").className = "store" + (ok ? " ok" : "");
-    $("storeText").textContent = ok ? "Tersimpan di database, dibagi ke semua pengguna" : "Tersimpan di browser ini saja";
+    $("storeText").textContent = ok ? (backend.fb ? "Tersimpan di Firebase Firestore" : "Tersimpan di database, dibagi ke semua pengguna") : "Tersimpan di browser ini saja";
   }
   function newId() { return "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
   async function persist(rec) {
@@ -629,15 +633,17 @@ form { display: grid; gap: 14px; }
     loadLocal();
     buildStatic();
     var db = null;
-    try { db = window.claude && window.claude.use ? await window.claude.use("db") : null; } catch (e) { db = null; }
+    if (fbDb) db = fbDb;
+    else try { db = window.claude && window.claude.use ? await window.claude.use("db") : null; } catch (e) { db = null; }
     if (db) {
-      backend = { mode: "db", col: db.collection("trainings") };
+      backend = { mode: "db", col: db.collection("trainings"), fb: !!fbDb };
       state.items = [];
       backend.col.onSnapshot(function (snap) {
         state.items = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
         render();
         if (state.detailId) renderDetail();
       }, function () {
+        if (fbDb) { state.items = []; $("store").className = "store"; $("storeText").textContent = "Database tidak bisa dibaca. Periksa aturan Firestore."; render(); return; }
         backend = { mode: "local", col: null }; loadLocal(); setStoreLabel(); render();
       });
     }
@@ -1072,8 +1078,16 @@ form { display: grid; gap: 14px; }
   var AUTH_EMAIL = "onboarding.zahirtrainer@gmail.com";
   var AUTH_PASS = "1234567";
   var AUTH_KEY = "jt-auth";
-  var authed = false, started = false;
-  try { authed = sessionStorage.getItem(AUTH_KEY) === "1"; } catch (e) { authed = false; }
+  var authed = false, started = false, authedEmail = AUTH_EMAIL;
+  /* Bila firebase-config.js diisi dan SDK Firebase termuat, login memakai Firebase Auth dan data memakai Firestore. */
+  var useFb = false, fbAuth = null, fbDb = null;
+  try {
+    if (window.FIREBASE_CONFIG && window.firebase) {
+      firebase.initializeApp(window.FIREBASE_CONFIG);
+      fbAuth = firebase.auth(); fbDb = firebase.firestore(); useFb = true;
+    }
+  } catch (e) { useFb = false; fbAuth = null; fbDb = null; }
+  if (!useFb) { try { authed = sessionStorage.getItem(AUTH_KEY) === "1"; } catch (e) { authed = false; } }
 
   (function drawCal() {
     var g = "", hi = { 3: "c1", 9: "c2", 12: "c3", 16: "c1", 20: "c2" };
@@ -1088,7 +1102,7 @@ form { display: grid; gap: 14px; }
     $("app").hidden = !authed;
     $("login").hidden = authed;
     if (authed) {
-      $("who").textContent = AUTH_EMAIL;
+      $("who").textContent = authedEmail;
       if (!started) { started = true; init(); }
     } else {
       setTimeout(function () { $("lEmail").focus(); }, 0);
@@ -1098,6 +1112,18 @@ form { display: grid; gap: 14px; }
     e.preventDefault();
     var em = $("lEmail").value.trim().toLowerCase(), pw = $("lPass").value;
     if (!em || !pw) { $("lMsg").textContent = "Isi email dan password."; return; }
+    if (useFb) {
+      $("lMsg").textContent = "Memeriksa…";
+      fbAuth.signInWithEmailAndPassword(em, pw).then(function () {
+        $("lMsg").textContent = ""; $("loginForm").reset();
+      }).catch(function (err) {
+        var c = err && err.code;
+        $("lMsg").textContent = c === "auth/network-request-failed" ? "Tidak bisa terhubung ke Firebase. Periksa koneksi internet."
+          : c === "auth/too-many-requests" ? "Terlalu banyak percobaan. Coba lagi beberapa menit lagi."
+          : "Email atau password salah.";
+      });
+      return;
+    }
     if (em !== AUTH_EMAIL || pw !== AUTH_PASS) { $("lMsg").textContent = "Email atau password salah."; return; }
     authed = true;
     try { sessionStorage.setItem(AUTH_KEY, "1"); } catch (err) {}
@@ -1111,6 +1137,7 @@ form { display: grid; gap: 14px; }
     $("pwToggle").setAttribute("aria-pressed", show ? "true" : "false");
   });
   $("logout").addEventListener("click", function () {
+    if (useFb) { fbAuth.signOut().then(function () { location.reload(); }); return; }
     authed = false;
     try { sessionStorage.removeItem(AUTH_KEY); } catch (err) {}
     if (!$("overlay").hidden) closeOverlay();
@@ -1118,7 +1145,11 @@ form { display: grid; gap: 14px; }
     showAuth();
   });
 
-  showAuth();
+  if (useFb) {
+    fbAuth.onAuthStateChanged(function (u) { authed = !!u; authedEmail = u ? (u.email || "") : ""; showAuth(); });
+  } else {
+    showAuth();
+  }
 })();
 </script>
 </body>
