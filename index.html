@@ -126,6 +126,52 @@ textarea { resize: vertical; min-height: 68px; }
 .empty { border: 1px dashed var(--line); border-radius: 14px; padding: 40px 20px; text-align: center; color: var(--muted); }
 .empty strong { display: block; font-family: var(--font-display); font-size: 19px; color: var(--ink); margin-bottom: 4px; }
 
+/* login */
+body.auth { padding: 0; }
+.login { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: 100vh; min-height: 100dvh; }
+.lpane { background: var(--surface); border-right: 1px solid var(--line); padding: 36px max(36px, env(safe-area-inset-left, 0px)); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 16px; overflow: hidden; }
+.brand { display: flex; align-items: center; gap: 12px; font-family: var(--font-display); font-weight: 700; font-size: 26px; letter-spacing: -0.01em; }
+.brand .mark { width: 44px; height: 44px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; flex: none; }
+.brand .mark svg { width: 24px; height: 24px; }
+.illus { display: grid; place-items: center; min-height: 0; }
+.illus svg { width: min(100%, 470px); height: auto; }
+.illus .w { fill: var(--surface2); stroke: var(--line); stroke-width: 1.5; }
+.illus .bar { fill: var(--bg); }
+.illus .cell { fill: var(--line); opacity: 0.7; }
+.illus .c1 { fill: var(--good); opacity: 1; }
+.illus .c2 { fill: var(--accent); opacity: 1; }
+.illus .c3 { fill: var(--amber); opacity: 1; }
+.illus .fl { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+.illus .ti { fill: var(--ink); font: 700 19px var(--font-display); }
+.illus .ts { fill: var(--muted); font: 500 12px var(--font-body); }
+.illus .b1 { fill: var(--amber); opacity: 0.2; }
+.illus .b2 { fill: var(--accent); opacity: 0.2; }
+.lfoot { text-align: center; color: var(--muted); display: grid; gap: 6px; }
+.lfoot p { margin: 0; }
+.lfoot .ver { font-size: 12.5px; opacity: 0.8; }
+.rpane { display: grid; place-items: center; padding: 32px max(20px, env(safe-area-inset-right, 0px)); }
+.lcard { width: 100%; max-width: 440px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 36px 40px 40px; display: grid; gap: 16px; box-shadow: 0 18px 50px rgba(0, 0, 0, 0.25); }
+.lcard h2 { font-family: var(--font-display); font-size: 28px; margin: 0; }
+.lsub { color: var(--muted); margin: -8px 0 4px; font-size: 14.5px; }
+.lcard .fld > label { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.lcard input { padding: 12px 14px; }
+.pw { position: relative; }
+.pw input { padding-right: 76px; }
+.pw button { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: transparent; border: 0; color: var(--accent); font-weight: 600; font-size: 13px; cursor: pointer; padding: 6px 10px; border-radius: 6px; }
+.pw button:hover { background: var(--surface2); }
+.b-main { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 10px; padding: 14px; font-weight: 600; font-size: 15.5px; cursor: pointer; margin-top: 4px; }
+.b-main:hover { filter: brightness(1.1); }
+.tact { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.b-out { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 8px; padding: 10px 16px; font-weight: 600; cursor: pointer; }
+.b-out:hover { color: var(--ink); border-color: var(--muted); }
+@media (max-width: 860px) {
+  .login { grid-template-columns: minmax(0, 1fr); }
+  .lpane { border-right: 0; border-bottom: 1px solid var(--line); padding: 20px 20px; grid-template-rows: auto; }
+  .illus, .lfoot { display: none; }
+  .rpane { align-items: start; padding: 24px 16px 40px; }
+  .lcard { padding: 26px 22px 28px; }
+}
+
 /* pop-up */
 .overlay { position: fixed; inset: 0; z-index: 20; background: var(--scrim); overflow-y: auto; display: flex; padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
 .dlg { background: var(--bg); border: 1px solid var(--line); border-radius: 16px; width: 100%; max-width: 780px; margin: auto; padding: 24px 26px 26px; }
@@ -187,6 +233,7 @@ form { display: grid; gap: 14px; }
 
 </head>
 <body>
+<div id="app" hidden>
 <div class="page">
   <div class="top">
     <div>
@@ -194,7 +241,10 @@ form { display: grid; gap: 14px; }
       <p class="sub">Training Zahir ke client: trainer, waktu, lokasi, kontak, dan biaya transport.</p>
       <span class="store" id="store"><i></i><span id="storeText">Menghubungkan…</span></span>
     </div>
-    <button class="btn-new" type="button" id="openNew">+ Buat Jadwal</button>
+    <div class="tact">
+      <button class="b-out" type="button" id="logout">Keluar</button>
+      <button class="btn-new" type="button" id="openNew">+ Buat Jadwal</button>
+    </div>
   </div>
 
   <div class="stats">
@@ -282,6 +332,48 @@ form { display: grid; gap: 14px; }
   </div>
 </div>
 <div class="toast" id="toast" role="status" hidden></div>
+</div>
+
+<div class="login" id="login" hidden>
+  <div class="lpane">
+    <div class="brand">
+      <span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4M8 15l2.5 2.5L16 13"/></svg></span>
+      <span>Jadwal Training</span>
+    </div>
+    <div class="illus">
+      <svg viewBox="0 0 420 320" role="img" aria-label="Ilustrasi kalender jadwal training">
+        <circle class="b1" cx="338" cy="88" r="78"/>
+        <circle class="b2" cx="62" cy="252" r="52"/>
+        <rect class="w" x="70" y="40" width="262" height="212" rx="18"/>
+        <path class="bar" d="M70 76V58a18 18 0 0 1 18-18h226a18 18 0 0 1 18 18v18z"/>
+        <circle cx="92" cy="58" r="4.5" fill="#ef5b45"/><circle cx="108" cy="58" r="4.5" fill="#f5a524"/><circle cx="124" cy="58" r="4.5" fill="#28c27a"/>
+        <g id="cal"></g>
+        <rect class="fl" x="236" y="206" width="146" height="74" rx="14"/>
+        <text class="ts" x="254" y="232">Training Zahir</text>
+        <text class="ti" x="254" y="259">09.00 WIB</text>
+        <circle cx="358" cy="226" r="9" fill="var(--good)"/><path d="M353.5 226l3.2 3.2 5.2-5.6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="30" y="112" width="58" height="58" rx="14" fill="var(--accent)"/>
+        <path d="M46 141l9 9 17-18" fill="none" stroke="var(--accent-ink)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="lfoot">
+      <p>Jadwal training Zahir, rapi dan terpantau dari satu halaman.</p>
+      <p class="ver">v1.0</p>
+    </div>
+  </div>
+  <div class="rpane">
+    <form class="lcard" id="loginForm" novalidate>
+      <h2>Masuk</h2>
+      <p class="lsub">Masuk untuk mengelola jadwal training.</p>
+      <div class="fld"><label for="lEmail">Email</label><input id="lEmail" type="email" inputmode="email" autocomplete="username" placeholder="nama@perusahaan.com"></div>
+      <div class="fld"><label for="lPass">Password</label>
+        <div class="pw"><input id="lPass" type="password" autocomplete="current-password" placeholder="Password"><button type="button" id="pwToggle" aria-pressed="false">Lihat</button></div>
+      </div>
+      <p class="msg" id="lMsg" role="alert"></p>
+      <button class="b-main" type="submit">Masuk</button>
+    </form>
+  </div>
+</div>
 
 <script>
 (function () {
@@ -595,7 +687,56 @@ form { display: grid; gap: 14px; }
     render();
   });
 
-  init();
+  /* ---------- login (sementara di-hardcode) ---------- */
+  var AUTH_EMAIL = "onboarding.zahirtrainer@gmail.com";
+  var AUTH_PASS = "1234567";
+  var AUTH_KEY = "jt-auth";
+  var authed = false, started = false;
+  try { authed = sessionStorage.getItem(AUTH_KEY) === "1"; } catch (e) { authed = false; }
+
+  (function drawCal() {
+    var g = "", hi = { 3: "c1", 9: "c2", 12: "c3", 16: "c1", 20: "c2" };
+    for (var r = 0; r < 4; r++) for (var c = 0; c < 7; c++) {
+      var n = r * 7 + c;
+      g += '<rect class="cell ' + (hi[n] || "") + '" x="' + (92 + c * 32) + '" y="' + (92 + r * 28) + '" width="22" height="18" rx="5"/>';
+    }
+    $("cal").innerHTML = g;
+  })();
+
+  function showAuth() {
+    $("app").hidden = !authed;
+    $("login").hidden = authed;
+    document.body.classList.toggle("auth", !authed);
+    if (authed) {
+      if (!started) { started = true; init(); }
+    } else {
+      setTimeout(function () { $("lEmail").focus(); }, 0);
+    }
+  }
+  $("loginForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var em = $("lEmail").value.trim().toLowerCase(), pw = $("lPass").value;
+    if (!em || !pw) { $("lMsg").textContent = "Isi email dan password."; return; }
+    if (em !== AUTH_EMAIL || pw !== AUTH_PASS) { $("lMsg").textContent = "Email atau password salah."; return; }
+    authed = true;
+    try { sessionStorage.setItem(AUTH_KEY, "1"); } catch (err) {}
+    $("lMsg").textContent = ""; $("loginForm").reset();
+    showAuth();
+  });
+  $("pwToggle").addEventListener("click", function () {
+    var show = $("lPass").type === "password";
+    $("lPass").type = show ? "text" : "password";
+    $("pwToggle").textContent = show ? "Sembunyikan" : "Lihat";
+    $("pwToggle").setAttribute("aria-pressed", show ? "true" : "false");
+  });
+  $("logout").addEventListener("click", function () {
+    authed = false;
+    try { sessionStorage.removeItem(AUTH_KEY); } catch (err) {}
+    if (!$("overlay").hidden) closeOverlay();
+    showAuth();
+  });
+
+  showAuth();
 })();
 </script>
 </body>
