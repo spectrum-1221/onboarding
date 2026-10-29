@@ -602,9 +602,6 @@ form { display: grid; gap: 14px; }
     </div>
   </div>
 
-  <!-- Print area for Berita Acara -->
-  <div id="print-ba" aria-hidden="true"></div>
-
   <div class="overlay" id="overlay" hidden>
     <!-- form -->
     <div class="dlg" id="dlgForm" role="dialog" aria-modal="true" aria-labelledby="formTitle" hidden>
@@ -707,6 +704,9 @@ form { display: grid; gap: 14px; }
     </form>
   </div>
 </div>
+
+<!-- Area cetak Berita Acara: harus anak langsung body agar tidak ikut tersembunyi saat cetak -->
+<div id="print-ba" aria-hidden="true"></div>
 
 <script>
 (function () {
@@ -1578,7 +1578,7 @@ form { display: grid; gap: 14px; }
     var dayName = DAYS[d.getDay()];
     var tglLong = d.getDate() + " " + MONTHS[d.getMonth()] + " " + d.getFullYear();
     var tglFull = dayName + ", " + tglLong;
-    var waktu = (b.jamMulai || "09:00") + ":00 – " + (b.jamSelesai || "17:00") + ":00 WIB";
+    var waktu = (b.jamMulai || "09:00") + " – " + (b.jamSelesai || "17:00") + " WIB";
 
     var jenisFull = b.jenisKegiatan || "";
     var jenisCap = jenisFull.toUpperCase();
@@ -1656,7 +1656,7 @@ form { display: grid; gap: 14px; }
     // Approval
     var nowStr = new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
     var approvalHtml = '<div class="papproval">' +
-      '<div class="papproval-head">✓ TELAH DISETUJUI SECARA ELEKTRONIK</div>' +
+      '<div class="papproval-head"' + (b.status === 'approved' ? '' : ' style="background:#666"') + '>' + (b.status === 'approved' ? '✓ TELAH DISETUJUI SECARA ELEKTRONIK' : 'MENUNGGU PERSETUJUAN') + '</div>' +
       '<div class="papproval-cols">' +
       '<div class="papproval-col"><div class="pac-label">Pihak Internal</div>' +
       (b.status === 'approved' ? '<div class="pac-stamp"><span>APPROVED</span></div>' : '<div style="height:80px;margin:8px auto"></div>') +
