@@ -5,7 +5,17 @@ service cloud.firestore {
     // Tambahkan email trainer lain ke dalam daftar bila perlu.
     match /trainings/{id} {
       allow read, write: if request.auth != null
-        && request.auth.token.email in ['onboarding.zahirtrainer@gmail.com'];
+        && request.auth.token.email in [
+          'onboarding.zahirtrainer@gmail.com',
+          'sigitprasetiyo123@gmail.com'
+        ];
+    }
+    match /beritaAcaras/{id} {
+      allow read, write: if request.auth != null
+        && request.auth.token.email in [
+          'onboarding.zahirtrainer@gmail.com',
+          'sigitprasetiyo123@gmail.com'
+        ];
     }
   }
 }
