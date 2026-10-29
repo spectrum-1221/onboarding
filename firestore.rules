@@ -10,6 +10,28 @@ service cloud.firestore {
           'sigitprasetiyo123@gmail.com'
         ];
     }
+    // Salinan Berita Acara untuk halaman persetujuan klien. Dokumen hanya bisa dibuka lewat token acak
+    // (get), tidak bisa didaftar. Klien tanpa login hanya boleh mengubah status sent -> approved.
+    match /baShare/{token} {
+      allow get: if true;
+      allow list, create, delete: if request.auth != null
+        && request.auth.token.email in [
+          'onboarding.zahirtrainer@gmail.com',
+          'sigitprasetiyo123@gmail.com'
+        ];
+      allow update: if (request.auth != null
+        && request.auth.token.email in [
+          'onboarding.zahirtrainer@gmail.com',
+          'sigitprasetiyo123@gmail.com'
+        ])
+        || (resource.data.status == 'sent'
+          && request.resource.data.status == 'approved'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'approvedAt', 'approvedBy'])
+          && request.resource.data.approvedBy is string
+          && request.resource.data.approvedBy.size() > 0
+          && request.resource.data.approvedBy.size() <= 100
+          && request.resource.data.approvedAt is string);
+    }
     match /beritaAcaras/{id} {
       allow read, write: if request.auth != null
         && request.auth.token.email in [
