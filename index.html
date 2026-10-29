@@ -395,7 +395,10 @@ form { display: grid; gap: 14px; }
 /* checklist blocks */
 .ck-block { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 8px; }
 .ck-block .ck-head { font-weight: 700; font-size: 13.5px; color: var(--ink); }
+.ck-sub { font-size: 12.5px; font-weight: 700; color: var(--info-ink); margin-top: 4px; }
+.ck-block textarea { min-height: 56px; }
 .ck-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 5px 10px; }
+@media (max-width: 520px) { .ck-grid { grid-template-columns: minmax(0,1fr); } }
 .ck-item { display: flex; align-items: center; gap: 8px; font-size: 13.5px; cursor: pointer; user-select: none; }
 .ck-item input[type="checkbox"] { width: 15px; height: 15px; flex: none; cursor: pointer; accent-color: var(--accent); }
 
@@ -437,7 +440,8 @@ form { display: grid; gap: 14px; }
 .pbody { font-size: 11pt; line-height: 1.75; margin: 6px 0; white-space: pre-wrap; }
 .plist { margin: 5px 0; padding-left: 22px; font-size: 11pt; }
 .plist li { margin-bottom: 3px; }
-.pck-wrap { margin: 8px 0; }
+.pck-wrap { margin: 8px 0; break-inside: avoid; }
+.pck-sub { font-weight: bold; font-size: 10.5pt; margin: 6px 0 2px 4px; color: #333; }
 .pck-title { font-weight: bold; font-size: 11pt; text-decoration: underline; margin-bottom: 5px; }
 .pck-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 16px; margin-left: 4px; font-size: 11pt; }
 .pck-item::before { content: "☐  "; }
@@ -716,6 +720,23 @@ form { display: grid; gap: 14px; }
   var VIEWS = ["dashboard", "jadwal", "kalender", "perusahaan", "trainer", "laporan", "ba"];
   var BA_JENIS = ["IT Onsite", "Training", "Presentasi", "Meeting", "Serah Terima Desain", "Lainnya"];
   var BA_CODES = { "IT Onsite": "ITO", "Training": "TRN", "Presentasi": "PRE", "Meeting": "MTG", "Serah Terima Desain": "STD", "Lainnya": "LNY" };
+  /* Checklist IT Onsite: tiap seksi punya kelompok (sub-judul opsional) dan satu kolom keterangan. */
+  var BA_ITO = [
+    { key: "jenisLayanan", label: "Jenis Layanan", groups: [
+      { items: [["maintenance", "Maintenance"], ["reguler", "Reguler"], ["enterprisePlus", "Enterprise Plus"], ["vip", "VIP"]] } ] },
+    { key: "perantiKeras", label: "Peranti Keras", groups: [
+      { label: "Spec PC", items: [["prosesor", "Prosesor, RAM, HDD"], ["sistemOperasi", "Sistem Operasi"]] },
+      { label: "Jaringan", items: [["mappingJaringan", "Mapping Jaringan"], ["cekJaringan", "Cek Sistem Jaringan"]] },
+      { label: "Spek User", items: [["spekUser", "Spek User"], ["jaringanUser", "Jaringan User"]] },
+      { label: "Perangkat", items: [["printer", "Printer"], ["kapasitasHdd", "Kapasitas HDD"]] } ] },
+    { key: "database", label: "Database", groups: [
+      { label: "Zahir", items: [["pemutakhiran", "Pemutakhiran Zahir"], ["registrasi", "Registrasi Zahir"], ["fiturUser", "Fitur per User"], ["cekCetakFaktur", "Cek Cetak Faktur"]] },
+      { label: "Produk Lain", items: [["pos", "Zahir Point of Sales"], ["reportServer", "Zahir Report Server"], ["payrollHrm", "Zahir Payroll HRM"]] },
+      { label: "Sinkronisasi Data", items: [["prosedur", "Prosedur"], ["settingFtp", "Setting FTP"], ["folderExportImport", "Folder Export & Import"]] },
+      { label: "Perbaikan & Pemeliharaan", items: [["perbaikan", "Perbaikan"], ["alatBantu", "Alat Bantu"], ["backupData", "Backup Data"], ["cutOffData", "Cut off Data"], ["imporData", "Impor Data"]] } ] },
+    { key: "laporan", label: "Laporan", groups: [
+      { label: "Ketidaksesuaian Laporan", items: [["keuangan", "Keuangan"], ["bukuBesar", "Buku Besar"], ["kasBank", "Kas & Bank"], ["penjualan", "Penjualan"], ["persediaan", "Persediaan"], ["proyek", "Proyek"], ["hartaTetap", "Harta Tetap"], ["neraca", "Neraca"]] } ] }
+  ];
   var now0 = new Date();
   var state = {
     items: [], view: "dashboard",
@@ -1272,20 +1293,20 @@ form { display: grid; gap: 14px; }
       html += '</div>';
     } else if (isITO) {
       var ic = ba ? (ba.itoChecklist || {}) : {};
-      var itoSections = [
-        { key: 'jenisLayanan', label: 'Jenis Layanan', items: [['maintenance','Maintenance'],['reguler','Reguler'],['enterprisePlus','Enterprise Plus'],['vip','VIP']] },
-        { key: 'perantiKeras', label: 'Peranti Keras', items: [['prosesor','Prosesor / Spec PC'],['sistemOperasi','Sistem Operasi'],['jaringan','Mapping Jaringan'],['spekUser','Spek User'],['perangkat','Perangkat']] },
-        { key: 'database', label: 'Database', items: [['pemutakhiran','Pemutakhiran Data'],['produkLain','Produk Lain'],['sinkronisasi','Sinkronisasi Data'],['perbaikan','Perbaikan & Pemeliharaan']] },
-        { key: 'laporan', label: 'Laporan', items: [['ketidaksesuaian','Ketidaksesuaian']] }
-      ];
       html += '<div class="group"><div class="gt">Checklist IT Onsite</div><div style="display:grid;gap:10px">';
-      itoSections.forEach(function (sec) {
+      BA_ITO.forEach(function (sec) {
         var secData = (ic[sec.key] || {});
-        html += '<div class="ck-block"><div class="ck-head">' + sec.label + '</div><div class="ck-grid">';
-        sec.items.forEach(function (ck) {
-          html += '<label class="ck-item"><input type="checkbox" data-ito-sec="' + sec.key + '" value="' + ck[0] + '"' + (secData[ck[0]] ? ' checked' : '') + '> ' + ck[1] + '</label>';
+        html += '<div class="ck-block"><div class="ck-head">' + esc(sec.label) + '</div>';
+        sec.groups.forEach(function (g) {
+          if (g.label) html += '<div class="ck-sub">' + esc(g.label) + '</div>';
+          html += '<div class="ck-grid">';
+          g.items.forEach(function (ck) {
+            html += '<label class="ck-item"><input type="checkbox" data-ito-sec="' + sec.key + '" value="' + ck[0] + '"' + (secData[ck[0]] ? ' checked' : '') + '> ' + esc(ck[1]) + '</label>';
+          });
+          html += '</div>';
         });
-        html += '</div><div class="fld" style="margin-top:6px"><label style="font-size:12px">Keterangan</label><input data-ito-ket="' + sec.key + '" placeholder="Keterangan…" value="' + esc(secData.ket || '') + '"></div></div>';
+        html += '<div class="fld" style="margin-top:4px"><label for="ket-' + sec.key + '" style="font-size:12.5px">Keterangan ' + esc(sec.label) + '</label>' +
+          '<textarea id="ket-' + sec.key + '" rows="2" data-ito-ket="' + sec.key + '" placeholder="Catatan untuk ' + esc(sec.label) + '…">' + esc(secData.ket || '') + '</textarea></div></div>';
       });
       html += '</div></div>';
     }
@@ -1465,7 +1486,7 @@ form { display: grid; gap: 14px; }
       rec.trainingChecklist = tc;
     } else if (jenis === "IT Onsite") {
       var ic = {};
-      ["jenisLayanan","perantiKeras","database","laporan"].forEach(function (sk) {
+      BA_ITO.map(function (x) { return x.key; }).forEach(function (sk) {
         var sd = {}; var sChecked = document.querySelectorAll('[data-ito-sec="' + sk + '"]:checked');
         sChecked.forEach(function (c) { sd[c.value] = true; });
         var ketEl2 = document.querySelector('[data-ito-ket="' + sk + '"]');
@@ -1619,18 +1640,16 @@ form { display: grid; gap: 14px; }
       ckHtml += '</div>';
     } else if (b.jenisKegiatan === "IT Onsite" && b.itoChecklist) {
       var ic = b.itoChecklist;
-      var itoS2 = [
-        { key: 'jenisLayanan', label: 'Jenis Layanan', items: [['maintenance','Maintenance'],['reguler','Reguler'],['enterprisePlus','Enterprise Plus'],['vip','VIP']] },
-        { key: 'perantiKeras', label: 'Peranti Keras', items: [['prosesor','Prosesor / Spec PC'],['sistemOperasi','Sistem Operasi'],['jaringan','Mapping Jaringan'],['spekUser','Spek User'],['perangkat','Perangkat']] },
-        { key: 'database', label: 'Database', items: [['pemutakhiran','Pemutakhiran Data'],['produkLain','Produk Lain'],['sinkronisasi','Sinkronisasi Data'],['perbaikan','Perbaikan & Pemeliharaan']] },
-        { key: 'laporan', label: 'Laporan', items: [['ketidaksesuaian','Ketidaksesuaian']] }
-      ];
       ckHtml += '<div class="psec">Detail Kegiatan IT Onsite</div>';
-      itoS2.forEach(function (sec) {
+      BA_ITO.forEach(function (sec) {
         var sd = ic[sec.key] || {};
-        ckHtml += '<div class="pck-wrap"><div class="pck-title">' + sec.label + '</div><div class="pck-grid">';
-        sec.items.forEach(function (it) { ckHtml += '<div class="pck-item' + (sd[it[0]] ? ' on' : '') + '">' + it[1] + '</div>'; });
-        ckHtml += '</div>';
+        ckHtml += '<div class="pck-wrap"><div class="pck-title">' + esc(sec.label) + '</div>';
+        sec.groups.forEach(function (g) {
+          if (g.label) ckHtml += '<div class="pck-sub">' + esc(g.label) + '</div>';
+          ckHtml += '<div class="pck-grid">';
+          g.items.forEach(function (it) { ckHtml += '<div class="pck-item' + (sd[it[0]] ? ' on' : '') + '">' + esc(it[1]) + '</div>'; });
+          ckHtml += '</div>';
+        });
         if (sd.ket) ckHtml += '<p class="pck-ket"><em>' + esc(sd.ket) + '</em></p>';
         ckHtml += '</div>';
       });
