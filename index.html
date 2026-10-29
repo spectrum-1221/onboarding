@@ -467,6 +467,30 @@ form { display: grid; gap: 14px; }
 .pac-stamp small { display: block; font-size: 6pt; }
 .papproval-note { text-align: center; font-style: italic; font-size: 9.5pt; margin: 8px 0 0; color: #333; }
 .pfooter { margin-top: 14px; border-top: 1px solid #ccc; padding-top: 8px; text-align: center; font-size: 9pt; color: #444; }
+/* rekap komisi */
+#kmBody { margin: 0; width: 100%; max-width: none; }
+.km-rates { line-height: 1.7; }
+.km-rates .r1 { color: var(--accent); font-weight: 600; } .km-rates .r2 { color: var(--good); font-weight: 600; } .km-rates .r3 { color: var(--amber); font-weight: 600; }
+.km-filter { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+.km-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.km-stats .stat b { font-size: 26px; }
+.km-card { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 14px; padding: 16px 18px; display: grid; gap: 12px; }
+.km-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.km-av { width: 42px; height: 42px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; display: grid; place-items: center; flex: none; }
+.km-nm { flex: 1 1 200px; min-width: 0; }
+.km-nm b { font-size: 17px; } .km-nm small { display: block; color: var(--muted); margin-top: 2px; overflow-wrap: anywhere; }
+.km-tot { text-align: right; } .km-tot b { display: block; font-family: var(--font-display); font-size: 24px; color: var(--good); } .km-tot small { color: var(--muted); }
+.km-tag { display: inline-block; font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 6px; border: 1px solid var(--line); margin-right: 6px; color: var(--accent); }
+.km-tag.p { color: var(--violet); }
+.km-mini { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.km-mini div { background: var(--surface2); border-radius: 10px; padding: 10px 12px; }
+.km-mini small { display: block; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.km-mini b { font-size: 16px; }
+.km-rows { background: var(--surface2); border-radius: 10px; padding: 8px 12px; display: grid; }
+.km-rows .h { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; padding: 4px 0; }
+.km-row { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 14px; flex-wrap: wrap; }
+.km-row span { color: var(--muted); } .km-row b { font-weight: 600; }
+@media (max-width: 760px) { .km-stats, .km-mini { grid-template-columns: repeat(2, minmax(0, 1fr)); } .km-tot { text-align: left; } }
 /* halaman persetujuan klien */
 #client { min-height: 100vh; background: var(--bg, #eef2f2); padding: 16px 12px 60px; }
 .cl-wrap { max-width: 860px; margin: 0 auto; display: grid; gap: 14px; }
@@ -508,6 +532,7 @@ form { display: grid; gap: 14px; }
       <a class="nav" href="#trainer" data-view="trainer"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>Trainer</a>
       <div class="sgroup">Laporan</div>
       <a class="nav" href="#laporan" data-view="laporan"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h15a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h11"/><circle cx="16" cy="13.5" r="1.2"/></svg>Biaya Transport</a>
+      <a class="nav" href="#komisi" data-view="komisi"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M16.5 7.5C16 6 14.5 5 12 5S8 6.2 8 8c0 4.5 8 2.5 8 7 0 1.8-1.8 3-4 3s-4-1-4.5-2.5"/></svg>Rekap Komisi</a>
       <div class="sgroup">Berita Acara</div>
       <button class="nav" type="button" data-ba-new><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Buat Berita Acara</button>
       <a class="nav" href="#ba" data-view="ba"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>Daftar BA<span class="badge" id="navBA">0</span></a>
@@ -583,6 +608,24 @@ form { display: grid; gap: 14px; }
           <div class="phead"><div><h1>Biaya Transport</h1><p class="sub">Rekap biaya transport per bulan dan per trainer.</p></div>
             <div class="pact"><label for="lapMonth" class="lbl">Bulan</label><select id="lapMonth" style="width:auto;min-width:190px"></select></div></div>
           <div id="lapBody" class="view" style="gap:18px"></div>
+        </section>
+
+        <section class="view" id="v-komisi" hidden>
+          <div class="phead">
+            <div><h1>Rekap Komisi Layanan Teknis</h1><p class="sub km-rates" id="kmRates"></p></div>
+            <div class="pact"><button class="btn-new" type="button" id="kmExport">Export Excel</button></div>
+          </div>
+          <div class="km-filter">
+            <div class="fld"><label for="kmFrom">Dari Tanggal</label><input id="kmFrom" type="date"></div>
+            <div class="fld"><label for="kmTo">Sampai Tanggal</label><input id="kmTo" type="date"></div>
+            <div class="fld"><label for="kmTrainer">Nama Trainer</label><select id="kmTrainer"></select></div>
+            <div class="fld"><label for="kmCompany">Perusahaan / Proyek</label><select id="kmCompany"></select></div>
+          </div>
+          <div class="tool" id="kmStatusChips" role="group" aria-label="Status trainer"></div>
+          <div class="count" id="kmCount"></div>
+          <div class="rstats km-stats" id="kmStats"></div>
+          <div class="tool" id="kmTabs" role="group" aria-label="Tampilan"></div>
+          <div id="kmBody" class="view" style="gap:14px"></div>
         </section>
 
         <!-- Berita Acara -->
@@ -740,7 +783,7 @@ form { display: grid; gap: 14px; }
   var LS_KEY = "jadwal-training-zahir";
   var BA_LS_KEY = "zahir-berita-acara";
   var VERSIONS = ["Zahir Online", "Zahir Accounting 6", "Zahir Accounting 5", "Zahir Enterprise", "Lainnya"];
-  var VIEWS = ["dashboard", "jadwal", "kalender", "perusahaan", "trainer", "laporan", "ba"];
+  var VIEWS = ["dashboard", "jadwal", "kalender", "perusahaan", "trainer", "laporan", "komisi", "ba"];
   var BA_JENIS = ["IT Onsite", "Training", "Presentasi", "Meeting", "Serah Terima Desain", "Lainnya"];
   var BA_CODES = { "IT Onsite": "ITO", "Training": "TRN", "Presentasi": "PRE", "Meeting": "MTG", "Serah Terima Desain": "STD", "Lainnya": "LNY" };
   /* Checklist IT Onsite: tiap seksi punya kelompok (sub-judul opsional) dan satu kolom keterangan. */
@@ -905,8 +948,8 @@ form { display: grid; gap: 14px; }
   }
 
   /* ---------- render ---------- */
-  function fillSelect(el, list, cur) {
-    var o = '<option value="">Semua trainer</option>' + list.map(function (n) { return '<option value="' + esc(n) + '">' + esc(n) + "</option>"; }).join("");
+  function fillSelect(el, list, cur, allLabel) {
+    var o = '<option value="">' + (allLabel || "Semua trainer") + '</option>' + list.map(function (n) { return '<option value="' + esc(n) + '">' + esc(n) + "</option>"; }).join("");
     if (el.getAttribute("data-sig") !== o) { el.innerHTML = o; el.setAttribute("data-sig", o); }
     el.value = list.indexOf(cur) >= 0 ? cur : "";
     return el.value;
@@ -926,6 +969,7 @@ form { display: grid; gap: 14px; }
     else if (state.view === "perusahaan") renderPerusahaan();
     else if (state.view === "trainer") renderTrainer();
     else if (state.view === "laporan") renderLaporan();
+    else if (state.view === "komisi") renderKomisi();
     else if (state.view === "ba") renderBA();
   }
 
@@ -1098,6 +1142,161 @@ form { display: grid; gap: 14px; }
     }
     $("lapBody").innerHTML = h;
   }
+
+  /* ---------- rekap komisi layanan teknis ---------- */
+  var KOMISI = { trainingInternal: 100000, trainingPartner: 150000, onsite1: 100000, onsite2: 70000, kendaraan: 100000 };
+  var km = { from: "", to: "", trainer: "", company: "", status: "all", tab: "ringkas" };
+  function rbShort(n) { return "Rp" + Math.round(n / 1000) + "rb"; }
+  function fmtJam(j) { return String(Math.round(j * 100) / 100); }
+  function jamDiff(a, b) {
+    var m = /^(\d{1,2}):(\d{2})/, x = m.exec(a || ""), y = m.exec(b || "");
+    if (!x || !y) return 0;
+    var d = (+y[1] * 60 + +y[2]) - (+x[1] * 60 + +x[2]);
+    return d > 0 ? d / 60 : 0;
+  }
+  function komisiSesi(b, second, stMap) {
+    var onsite = b.jenisKegiatan === "IT Onsite", partner = !second && b.statusPetugas === "Partner", rate, label;
+    if (onsite) {
+      var two = +b.jumlahTeknisi === 2;
+      rate = two ? KOMISI.onsite2 : KOMISI.onsite1; label = two ? "2 teknisi" : "1 teknisi";
+    } else { rate = partner ? KOMISI.trainingPartner : KOMISI.trainingInternal; label = partner ? "Partner" : "Internal"; }
+    var jam = jamDiff(b.jamMulai, b.jamSelesai), kend = (b.kendaraan && !second) ? KOMISI.kendaraan : 0;
+    var nm = second ? (b.teknisi2 || "").trim() : (b.petugasInternal || "").trim();
+    return { id: b.id, tanggal: b.tanggal || "", jenis: b.jenisKegiatan, jenisLabel: onsite ? "Onsite" : "Training", nama: nm || "(tanpa nama)",
+      status: second ? ((stMap && stMap[nm.toLowerCase()]) || "Internal") : (partner ? "Partner" : "Internal"), perusahaan: b.perusahaan || "", nomor: b.nomorBA || "", baStatus: b.status,
+      jam: jam, rate: rate, label: label, komJam: Math.round(rate * jam), kend: kend, total: Math.round(rate * jam) + kend };
+  }
+  function komisiRows() {
+    var stMap = {};
+    baState.items.slice().sort(function (a, b) { return (a.tanggal || "").localeCompare(b.tanggal || ""); }).forEach(function (b) {
+      var n = (b.petugasInternal || "").trim().toLowerCase(); if (n && b.statusPetugas) stMap[n] = b.statusPetugas;
+    });
+    var out = [];
+    baState.items.forEach(function (b) {
+      if (b.jenisKegiatan !== "Training" && b.jenisKegiatan !== "IT Onsite") return;
+      out.push(komisiSesi(b, false, stMap));
+      if (b.jenisKegiatan === "IT Onsite" && +b.jumlahTeknisi === 2 && (b.teknisi2 || "").trim()) out.push(komisiSesi(b, true, stMap));
+    });
+    return out;
+  }
+  /* sesi dan jam dihitung per kegiatan (satu BA = satu sesi), komisi dijumlah per orang */
+  function komisiTotals(rows) {
+    var seen = {}, t = { sesi: 0, jam: 0, kend: 0, total: 0, komJam: 0 };
+    rows.forEach(function (r) {
+      if (!seen[r.id]) { seen[r.id] = 1; t.sesi++; t.jam += r.jam; }
+      t.kend += r.kend; t.total += r.total; t.komJam += r.komJam;
+    });
+    return t;
+  }
+  function komisiFiltered(all) {
+    return all.filter(function (r) {
+      return (!km.from || r.tanggal >= km.from) && (!km.to || r.tanggal <= km.to) && (!km.trainer || r.nama === km.trainer) &&
+        (!km.company || r.perusahaan === km.company) && (km.status === "all" || r.status === km.status);
+    }).sort(function (a, b) { return b.tanggal.localeCompare(a.tanggal); });
+  }
+  function komisiGroups(rows) {
+    var g = {};
+    rows.forEach(function (r) {
+      var x = g[r.nama] || (g[r.nama] = { nama: r.nama, status: r.status, sesi: 0, jam: 0, komJam: 0, kend: 0, total: 0, companies: [], rows: [] });
+      x.sesi++; x.jam += r.jam; x.komJam += r.komJam; x.kend += r.kend; x.total += r.total; x.rows.push(r);
+      if (x.companies.indexOf(r.perusahaan) < 0) x.companies.push(r.perusahaan);
+    });
+    return Object.keys(g).map(function (k) { return g[k]; }).sort(function (a, b) { return a.nama.localeCompare(b.nama, "id"); });
+  }
+  function kmDateLabel(s) { if (!s) return "–"; var d = parseDate(s); return d.getDate() + " " + SHORT[d.getMonth()] + " " + d.getFullYear(); }
+
+  function renderKomisi() {
+    if (!km.from) { var n = new Date(); km.from = n.getFullYear() + "-" + String(n.getMonth() + 1).padStart(2, "0") + "-01"; km.to = todayStr(); }
+    $("kmRates").innerHTML = 'Training: Internal <span class="r1">' + rbShort(KOMISI.trainingInternal) + '/jam</span> · Partner <span class="r1">' + rbShort(KOMISI.trainingPartner) + '/jam</span> | Onsite: 1 Teknisi <span class="r2">' +
+      rbShort(KOMISI.onsite1) + '/jam</span> · 2 Teknisi <span class="r3">' + rbShort(KOMISI.onsite2) + '/jam/orang</span> · Kendaraan <span class="r2">+' + rbShort(KOMISI.kendaraan) + '</span>';
+    var all = komisiRows();
+    km.trainer = fillSelect($("kmTrainer"), uniq(all.map(function (r) { return r.nama; })), km.trainer);
+    km.company = fillSelect($("kmCompany"), uniq(all.map(function (r) { return r.perusahaan; })), km.company, "Semua perusahaan");
+    $("kmFrom").value = km.from; $("kmTo").value = km.to;
+    $("kmStatusChips").innerHTML = '<span class="lbl" style="align-self:center">Status Trainer</span>' + [["all", "Semua"], ["Internal", "Internal"], ["Partner", "Partner"]].map(function (s) {
+      return '<button type="button" class="chip-btn" data-kst="' + s[0] + '" aria-pressed="' + (km.status === s[0]) + '">' + s[1] + '</button>'; }).join("");
+    $("kmTabs").innerHTML = [["ringkas", "Ringkasan per Trainer"], ["detail", "Detail per Sesi"]].map(function (t) {
+      return '<button type="button" class="chip-btn" data-ktab="' + t[0] + '" aria-pressed="' + (km.tab === t[0]) + '">' + t[1] + '</button>'; }).join("");
+    var rows = komisiFiltered(all), groups = komisiGroups(rows);
+    var T = komisiTotals(rows), jam = T.jam, kend = T.kend, tot = T.total;
+    $("kmCount").innerHTML = 'Menampilkan <b>' + T.sesi + '</b> sesi · <b>' + groups.length + '</b> trainer';
+    $("kmStats").innerHTML = '<div class="stat s1"><span>Total Sesi</span><b>' + T.sesi + '</b></div>' +
+      '<div class="stat s2"><span>Total Jam</span><b>' + (Math.round(jam * 10) / 10).toFixed(1) + ' jam</b></div>' +
+      '<div class="stat s3"><span>Komisi Kendaraan</span><b>' + rupiah(kend) + '</b></div>' +
+      '<div class="stat s4"><span>Total Komisi</span><b>' + rupiah(tot) + '</b></div>';
+    if (!rows.length) { $("kmBody").innerHTML = '<div class="empty"><strong>Belum ada sesi di periode ini</strong>Komisi dihitung dari Berita Acara Training dan IT Onsite. Ubah rentang tanggal atau buat Berita Acara.</div>'; return; }
+    if (km.tab === "detail") {
+      $("kmBody").innerHTML = '<div class="tw"><table><thead><tr><th>Tanggal</th><th>Trainer</th><th>Status</th><th>Jenis</th><th>Perusahaan</th><th class="num">Jam</th><th class="num">Tarif/jam</th><th class="num">Komisi jam</th><th class="num">Kendaraan</th><th class="num">Total</th></tr></thead><tbody>' +
+        rows.map(function (r) {
+          return '<tr><td>' + kmDateLabel(r.tanggal) + '</td><td>' + esc(r.nama) + '</td><td>' + r.status + '</td><td>' + r.jenisLabel + (r.jenis === "IT Onsite" ? ' (' + r.label + ')' : '') + '</td><td class="wrap">' + esc(r.perusahaan) + '</td><td class="num">' + fmtJam(r.jam) + '</td><td class="num">' + rupiah(r.rate) + '</td><td class="num">' + rupiah(r.komJam) + '</td><td class="num">' + (r.kend ? rupiah(r.kend) : "–") + '</td><td class="num cost">' + rupiah(r.total) + '</td></tr>';
+        }).join("") + '</tbody><tfoot><tr><td colspan="5">Total</td><td class="num">' + fmtJam(jam) + '</td><td></td><td class="num">' + rupiah(tot - kend) + '</td><td class="num">' + rupiah(kend) + '</td><td class="num">' + rupiah(tot) + '</td></tr></tfoot></table></div>';
+      return;
+    }
+    $("kmBody").innerHTML = groups.map(function (g) {
+      return '<div class="km-card"><div class="km-head"><div class="km-av">' + esc(g.nama.charAt(0).toUpperCase()) + '</div>' +
+        '<div class="km-nm"><b>' + esc(g.nama) + '</b> <span class="km-tag' + (g.status === "Partner" ? ' p' : '') + '">' + g.status + '</span><small>' + g.sesi + ' sesi · ' + esc(g.companies.join(", ")) + '</small></div>' +
+        '<div class="km-tot"><b>' + rupiah(g.total) + '</b><small>total komisi</small></div></div>' +
+        '<div class="km-mini"><div><small>Total Jam</small><b>' + fmtJam(g.jam) + ' jam</b></div><div><small>Komisi Jam</small><b>' + rupiah(g.komJam) + '</b></div><div><small>Kendaraan</small><b>' + (g.kend ? rupiah(g.kend) : "–") + '</b></div><div><small>Total</small><b>' + rupiah(g.total) + '</b></div></div>' +
+        '<div class="km-rows"><div class="h">Rincian per sesi:</div>' + g.rows.map(function (r) {
+          return '<div class="km-row"><div>' + kmDateLabel(r.tanggal) + ' <span class="km-tag">' + r.jenisLabel + '</span> <span>' + (r.jenis === "IT Onsite" ? '(' + r.label + ') ' : '') + rupiah(r.rate) + '/jam × ' + fmtJam(r.jam) + 'j' + (r.kend ? ' + kendaraan ' + rupiah(r.kend) : '') + '</span></div><b>' + rupiah(r.total) + '</b></div>'; }).join("") + '</div></div>';
+    }).join("");
+  }
+  function kmLoadXlsx() {
+    return new Promise(function (res, rej) {
+      if (window.XLSX) { res(window.XLSX); return; }
+      var sc = document.createElement("script");
+      sc.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+      sc.onload = function () { window.XLSX ? res(window.XLSX) : rej(new Error("xlsx")); };
+      sc.onerror = function () { rej(new Error("xlsx")); };
+      document.head.appendChild(sc);
+    });
+  }
+  function kmPeriod() {
+    function f(s) { if (!s) return ""; var d = parseDate(s); return d.getDate() + " " + SHORT[d.getMonth()] + " " + d.getFullYear(); }
+    return f(km.from) + " s/d " + f(km.to);
+  }
+  async function kmExport() {
+    var rows = komisiFiltered(komisiRows());
+    if (!rows.length) { toast("Tidak ada data untuk diekspor"); return; }
+    var X;
+    try { X = await kmLoadXlsx(); } catch (e) { toast("Gagal memuat pustaka Excel. Periksa koneksi internet."); return; }
+    var groups = komisiGroups(rows), rp = '"Rp "#,##0', now = new Date();
+    var a1 = [["REKAP KOMISI LAYANAN TEKNIS — " + kmPeriod()], ["Digenerate: " + now.toLocaleDateString("id-ID")], [],
+      ["No", "Nama", "Status", "Sesi", "Proyek", "Total Jam", "Komisi Jam", "Komisi Kendaraan", "Total Komisi"]];
+    var jam = 0, kj = 0, kk = 0, tt = 0;
+    groups.forEach(function (g, i) {
+      a1.push([i + 1, g.nama, g.status, g.sesi, g.companies.join(", "), Math.round(g.jam * 100) / 100, g.komJam, g.kend, g.total]);
+      jam += g.jam; kj += g.komJam; kk += g.kend; tt += g.total;
+    });
+    var T = komisiTotals(rows);
+    a1.push([]); a1.push(["", "TOTAL", "", T.sesi, "", Math.round(T.jam * 100) / 100, kj, kk, tt]);
+    var ws1 = X.utils.aoa_to_sheet(a1);
+    for (var r = 4; r < a1.length; r++) { [6, 7, 8].forEach(function (c) { var ad = X.utils.encode_cell({ r: r, c: c }); if (ws1[ad]) ws1[ad].z = rp; }); }
+    ws1["!cols"] = [{ wch: 5 }, { wch: 22 }, { wch: 10 }, { wch: 7 }, { wch: 44 }, { wch: 11 }, { wch: 16 }, { wch: 18 }, { wch: 16 }];
+    var a2 = [["Tanggal", "No. BA", "Nama", "Status", "Jenis", "Teknisi", "Perusahaan", "Jam", "Tarif/Jam", "Komisi Jam", "Kendaraan", "Total"]];
+    rows.slice().sort(function (p, q) { return p.tanggal.localeCompare(q.tanggal); }).forEach(function (x) {
+      a2.push([x.tanggal, x.nomor, x.nama, x.status, x.jenisLabel, x.jenis === "IT Onsite" ? x.label : "", x.perusahaan, Math.round(x.jam * 100) / 100, x.rate, x.komJam, x.kend, x.total]);
+    });
+    var ws2 = X.utils.aoa_to_sheet(a2);
+    for (var r2 = 1; r2 < a2.length; r2++) { [8, 9, 10, 11].forEach(function (c) { var ad = X.utils.encode_cell({ r: r2, c: c }); if (ws2[ad]) ws2[ad].z = rp; }); }
+    ws2["!cols"] = [{ wch: 12 }, { wch: 20 }, { wch: 18 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 40 }, { wch: 7 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 }];
+    var wb = X.utils.book_new();
+    X.utils.book_append_sheet(wb, ws1, "Rekap Komisi"); X.utils.book_append_sheet(wb, ws2, "Detail Sesi");
+    X.writeFile(wb, "Rekap-Komisi-" + (km.from || "awal") + "_" + (km.to || "akhir") + ".xlsx");
+    toast("File Excel dibuat");
+  }
+  document.addEventListener("change", function (e) {
+    var t = e.target; if (!t || !t.id || t.id.indexOf("km") !== 0) return;
+    if (t.id === "kmFrom") km.from = t.value; else if (t.id === "kmTo") km.to = t.value;
+    else if (t.id === "kmTrainer") km.trainer = t.value; else if (t.id === "kmCompany") km.company = t.value; else return;
+    renderKomisi();
+  });
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest ? e.target.closest("[data-kst],[data-ktab],#kmExport") : null; if (!b) return;
+    if (b.id === "kmExport") { kmExport(); return; }
+    if (b.hasAttribute("data-kst")) km.status = b.getAttribute("data-kst"); else km.tab = b.getAttribute("data-ktab");
+    renderKomisi();
+  });
 
   /* ---------- form & detail ---------- */
   function buildStatic() {
@@ -1299,6 +1498,18 @@ form { display: grid; gap: 14px; }
       '<datalist id="baTrainerList">' + trainers2.map(function (t) { return '<option value="' + esc(t) + '">'; }).join('') + '</datalist></div>';
     html += '</div></div>';
 
+    // Komisi layanan teknis (dipakai di Rekap Komisi)
+    if (isTRN || isITO) {
+      html += '<div class="group"><div class="gt">Komisi Layanan Teknis</div><div class="ba-form-row3">';
+      html += '<div class="fld"><label for="baStatusPetugas">Status Petugas</label><select id="baStatusPetugas">' +
+        ['Internal', 'Partner'].map(function (x) { return '<option' + (ba && ba.statusPetugas === x ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select></div>';
+      if (isITO) html += '<div class="fld"><label for="baJmlTeknisi">Jumlah Teknisi</label><select id="baJmlTeknisi">' +
+        [1, 2].map(function (x) { return '<option value="' + x + '"' + (ba && +ba.jumlahTeknisi === x ? ' selected' : '') + '>' + x + ' teknisi</option>'; }).join('') + '</select></div>';
+      if (isITO) html += '<div class="fld" id="baTek2Wrap"' + (ba && +ba.jumlahTeknisi === 2 ? '' : ' hidden') + '><label for="baTeknisi2">Nama Teknisi 2</label><input id="baTeknisi2" list="baTrainerList" placeholder="Teknisi pendamping" value="' + esc(ba ? ba.teknisi2 : '') + '"></div>';
+      html += '<div class="fld"><label>&nbsp;</label><label class="ck-item"><input type="checkbox" id="baKendaraan"' + (ba && ba.kendaraan ? ' checked' : '') + '> Pakai kendaraan</label></div>';
+      html += '</div></div>';
+    }
+
     // Ringkasan
     html += '<div class="fld"><label for="baRingkasan">Agenda / Ringkasan Kegiatan</label><textarea id="baRingkasan" rows="3" placeholder="Ringkasan agenda kegiatan…">' + esc(ba ? ba.ringkasan : '') + '</textarea></div>';
 
@@ -1403,6 +1614,17 @@ form { display: grid; gap: 14px; }
   }
 
   function bindBAFormEvents() {
+    var jt = $("baJmlTeknisi");
+    if (jt) jt.addEventListener("change", function () { $("baTek2Wrap").hidden = +jt.value !== 2; });
+    var ptg = $("baPetugas");
+    if (ptg) ptg.addEventListener("change", function () {
+      /* status petugas mengikuti BA terakhir petugas yang sama */
+      var nm = ptg.value.trim().toLowerCase(), st = $("baStatusPetugas");
+      if (!nm || !st) return;
+      var last = baState.items.filter(function (x) { return x.statusPetugas && (x.petugasInternal || "").trim().toLowerCase() === nm; })
+        .sort(function (a, b) { return (b.tanggal || "").localeCompare(a.tanggal || ""); })[0];
+      if (last) st.value = last.statusPetugas;
+    });
     var jenisSel = $("baJenis");
     if (jenisSel) jenisSel.addEventListener("change", function () {
       var cur = collectBAForm();
@@ -1511,6 +1733,14 @@ form { display: grid; gap: 14px; }
       catatan: tv("baCatatan"),
       channelPengiriman: v("baChannel")
     };
+    if ($("baStatusPetugas")) {
+      rec.statusPetugas = $("baStatusPetugas").value;
+      rec.kendaraan = !!$("baKendaraan").checked;
+      if ($("baJmlTeknisi")) {
+        rec.jumlahTeknisi = +$("baJmlTeknisi").value || 1;
+        rec.teknisi2 = rec.jumlahTeknisi === 2 ? $("baTeknisi2").value.trim() : "";
+      }
+    }
     if (jenis === "Training") {
       var tc = {}; var checked = document.querySelectorAll('[name="trck"]:checked');
       checked.forEach(function (c) { tc[c.value] = true; });
