@@ -4,10 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>html{-webkit-text-size-adjust:100%}body{margin:0}img{max-width:100%}</style>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
 <title>Jadwal Training Zahir</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap">
 <style>
@@ -856,7 +854,7 @@ form { display: grid; gap: 14px; }
   function setStoreLabel() {
     var ok = backend.mode === "db";
     $("store").className = "store" + (ok ? " ok" : "");
-    $("storeText").textContent = ok ? (backend.fb ? "Tersimpan di Firebase Firestore" : "Tersimpan di database, dibagi ke semua pengguna") : "Tersimpan di browser ini saja";
+    $("storeText").textContent = ok ? (backend.remote ? "Tersimpan di Supabase, dibagi ke semua pengguna" : "Tersimpan di database, dibagi ke semua pengguna") : "Tersimpan di browser ini saja";
   }
   function newId() { return "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
   async function persist(rec) {
@@ -877,17 +875,17 @@ form { display: grid; gap: 14px; }
     loadLocal();
     buildStatic();
     var db = null;
-    if (fbDb) db = fbDb;
+    if (sbDb) db = sbDb;
     else try { db = window.claude && window.claude.use ? await window.claude.use("db") : null; } catch (e) { db = null; }
     if (db) {
-      backend = { mode: "db", col: db.collection("trainings"), fb: !!fbDb };
+      backend = { mode: "db", col: db.collection("trainings"), remote: !!sbDb };
       state.items = [];
       backend.col.onSnapshot(function (snap) {
         state.items = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
         render();
         if (state.detailId) renderDetail();
       }, function () {
-        if (fbDb) { state.items = []; $("store").className = "store"; $("storeText").textContent = "Database tidak bisa dibaca. Periksa aturan Firestore."; render(); return; }
+        if (sbDb) { state.items = []; $("store").className = "store"; $("storeText").textContent = "Database tidak bisa dibaca. Periksa RLS/policy Supabase."; render(); return; }
         backend = { mode: "local", col: null }; loadLocal(); setStoreLabel(); render();
       });
     }
@@ -1398,10 +1396,10 @@ form { display: grid; gap: 14px; }
   async function persistBA(rec) {
     if (baBackend.mode === "db") {
       var data = Object.assign({}, rec); delete data.id;
-      if (fbDb && rec.shareToken) {
+      if (sbDb && rec.shareToken) {
         /* salinan untuk halaman klien; ditulis lebih dulu agar status tidak balik dari sinkronisasi */
         var sc = Object.assign({}, data); sc.status = rec.status === "approved" ? "approved" : (rec.status === "sent" ? "sent" : "draft");
-        await fbDb.collection("baShare").doc(rec.shareToken).set(sc);
+        await sbDb.collection("baShare").doc(rec.shareToken).set(sc);
       }
       await baBackend.col.doc(rec.id).set(data);
     } else {
@@ -1414,7 +1412,7 @@ form { display: grid; gap: 14px; }
   async function removeBA(id) {
     if (baBackend.mode === "db") {
       var old = baState.items.find(function (x) { return x.id === id; });
-      if (fbDb && old && old.shareToken) { try { await fbDb.collection("baShare").doc(old.shareToken).delete(); } catch (e) {} }
+      if (sbDb && old && old.shareToken) { try { await sbDb.collection("baShare").doc(old.shareToken).delete(); } catch (e) {} }
       await baBackend.col.doc(id).delete();
     }
     else { baState.items = baState.items.filter(function (x) { return x.id !== id; }); saveBALocal(); render(); }
@@ -1870,7 +1868,7 @@ form { display: grid; gap: 14px; }
       try {
         if (b.shareToken && b.status === "sent") { baState.sharePanel = true; renderBADetail(); }
         else { await shareBA(b); toast("Link persetujuan dibuat"); }
-      } catch (err) { sh.disabled = false; toast("Gagal membuat link. Periksa koneksi dan aturan Firestore."); }
+      } catch (err) { sh.disabled = false; toast("Gagal membuat link. Periksa koneksi dan RLS/policy Supabase."); }
     });
     var shCopy = $("ba-share-copy"); if (shCopy) shCopy.addEventListener("click", function () {
       var inp = $("ba-share-link"); inp.select();
@@ -1904,7 +1902,7 @@ form { display: grid; gap: 14px; }
   }
 
   /* --- Persetujuan klien --- */
-  function canShare() { return !!(fbDb && baBackend.mode === "db"); }
+  function canShare() { return !!(sbDb && baBackend.mode === "db"); }
   function baNewToken() {
     var a = new Uint8Array(24); crypto.getRandomValues(a);
     var cs = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789", t = "";
@@ -1939,10 +1937,9 @@ form { display: grid; gap: 14px; }
     document.title = "Persetujuan Berita Acara";
     var box = $("client"); box.hidden = false;
     function msg(t) { box.innerHTML = '<div class="cl-msg">' + esc(t) + '</div>'; }
-    if (!fbDb) { msg("Halaman ini membutuhkan koneksi database dan tidak dapat dibuka."); return; }
-    fbDb.collection("baShare").doc(token).onSnapshot(function (d) {
-      if (!d.exists) { msg("Link tidak valid atau sudah tidak berlaku."); return; }
-      var b = d.data();
+    if (!sbClient) { msg("Halaman ini membutuhkan koneksi database dan tidak dapat dibuka."); return; }
+    var stopped = false, lastStatus = null, timer = null;
+    function render2(b) {
       var bar;
       if (b.status === "approved") {
         bar = '<div class="cl-ok">Berita Acara ini telah disetujui' + (b.approvedBy ? ' oleh ' + esc(b.approvedBy) : '') + '.</div>' +
@@ -1962,11 +1959,28 @@ form { display: grid; gap: 14px; }
         $("cl-agree").addEventListener("change", upd); $("cl-name").addEventListener("input", upd);
         okb.addEventListener("click", function () {
           okb.disabled = true; $("cl-msg").textContent = "Menyimpan…";
-          fbDb.collection("baShare").doc(token).update({ status: "approved", approvedAt: new Date().toISOString(), approvedBy: $("cl-name").value.trim() })
-            .catch(function () { $("cl-msg").textContent = "Gagal menyimpan persetujuan. Periksa koneksi lalu coba lagi."; okb.disabled = false; });
+          sbClient.rpc("approve_ba_share", { p_token: token, p_approved_by: $("cl-name").value.trim() }).then(function (res) {
+            if (res.error) { $("cl-msg").textContent = "Gagal menyimpan persetujuan. Periksa koneksi lalu coba lagi."; okb.disabled = false; return; }
+            lastStatus = null; load();
+          }).catch(function () { $("cl-msg").textContent = "Gagal menyimpan persetujuan. Periksa koneksi lalu coba lagi."; okb.disabled = false; });
         });
       }
-    }, function () { msg("Dokumen tidak dapat dibuka. Periksa koneksi internet atau hubungi petugas Zahir."); });
+    }
+    function load() {
+      sbClient.rpc("get_ba_share", { p_token: token }).then(function (res) {
+        if (stopped) return;
+        if (res.error || !res.data || !res.data.length) { msg("Link tidak valid atau sudah tidak berlaku."); return; }
+        var row = res.data[0], b = row.data;
+        if (b.status !== lastStatus) { lastStatus = b.status; render2(b); }
+        if (b.status !== "approved") timer = setTimeout(load, 4000);
+      }).catch(function () {
+        if (stopped) return;
+        if (lastStatus === null) msg("Dokumen tidak dapat dibuka. Periksa koneksi internet atau hubungi petugas Zahir.");
+        timer = setTimeout(load, 6000);
+      });
+    }
+    load();
+    window.addEventListener("hashchange", function stop() { if ((location.hash || "").indexOf("/setuju/" + token) < 0) { stopped = true; if (timer) clearTimeout(timer); window.removeEventListener("hashchange", stop); } });
   }
 
   /* --- Print BA --- */
@@ -2092,8 +2106,8 @@ form { display: grid; gap: 14px; }
   /* --- BA event wiring in init --- */
   function initBA() {
     loadBALocal();
-    if (fbDb) {
-      baBackend = { mode: "db", col: fbDb.collection("beritaAcaras") };
+    if (sbDb) {
+      baBackend = { mode: "db", col: sbDb.collection("beritaAcaras") };
       baState.items = [];
       baBackend.col.onSnapshot(function (snap) {
         baState.items = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
@@ -2103,7 +2117,7 @@ form { display: grid; gap: 14px; }
       }, function () {
         baBackend = { mode: "local", col: null }; loadBALocal();
       });
-      fbDb.collection("baShare").onSnapshot(function (snap) {
+      sbDb.collection("baShare").onSnapshot(function (snap) {
         baState.shares = {};
         snap.docs.forEach(function (d) { baState.shares[d.id] = d.data(); });
         syncShares();
@@ -2224,15 +2238,43 @@ form { display: grid; gap: 14px; }
   var AUTH_PASS = "1234567";
   var AUTH_KEY = "jt-auth";
   var authed = false, started = false, authedEmail = AUTH_EMAIL;
-  /* Bila firebase-config.js diisi dan SDK Firebase termuat, login memakai Firebase Auth dan data memakai Firestore. */
-  var useFb = false, fbAuth = null, fbDb = null;
-  try {
-    if (window.FIREBASE_CONFIG && window.firebase) {
-      firebase.initializeApp(window.FIREBASE_CONFIG);
-      fbAuth = firebase.auth(); fbDb = firebase.firestore(); useFb = true;
+  /* Bila supabase-config.js diisi dan pustaka Supabase termuat, login memakai Supabase Auth dan data memakai Supabase. */
+  function sbCollection(sb, table) {
+    function fetchAll(cb, errCb) {
+      sb.from(table).select("id,data").then(function (res) {
+        if (res.error) { if (errCb) errCb(res.error); return; }
+        var docs = (res.data || []).map(function (r) { return { id: r.id, data: function () { return r.data; }, exists: true }; });
+        cb({ docs: docs });
+      }, function (e) { if (errCb) errCb(e); });
     }
-  } catch (e) { useFb = false; fbAuth = null; fbDb = null; }
-  if (!useFb) { try { authed = sessionStorage.getItem(AUTH_KEY) === "1"; } catch (e) { authed = false; } }
+    return {
+      doc: function (id) {
+        return {
+          set: function (data) { return sb.from(table).upsert({ id: id, data: data }); },
+          update: function (patch) {
+            return sb.from(table).select("data").eq("id", id).single().then(function (res) {
+              var merged = Object.assign({}, (res.data && res.data.data) || {}, patch);
+              return sb.from(table).upsert({ id: id, data: merged });
+            });
+          },
+          delete: function () { return sb.from(table).delete().eq("id", id); }
+        };
+      },
+      onSnapshot: function (cb, errCb) {
+        fetchAll(cb, errCb);
+        sb.channel("db-" + table).on("postgres_changes", { event: "*", schema: "public", table: table }, function () { fetchAll(cb, errCb); }).subscribe();
+      }
+    };
+  }
+  var useSb = false, sbClient = null, sbDb = null;
+  try {
+    if (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.url && window.SUPABASE_CONFIG.anonKey && window.supabase) {
+      sbClient = window.supabase.createClient(window.SUPABASE_CONFIG.url, window.SUPABASE_CONFIG.anonKey);
+      sbDb = { collection: function (table) { return sbCollection(sbClient, table); } };
+      useSb = true;
+    }
+  } catch (e) { useSb = false; sbClient = null; sbDb = null; }
+  if (!useSb) { try { authed = sessionStorage.getItem(AUTH_KEY) === "1"; } catch (e) { authed = false; } }
 
   (function drawCal() {
     var g = "", hi = { 3: "c1", 9: "c2", 12: "c3", 16: "c1", 20: "c2" };
@@ -2257,15 +2299,17 @@ form { display: grid; gap: 14px; }
     e.preventDefault();
     var em = $("lEmail").value.trim().toLowerCase(), pw = $("lPass").value;
     if (!em || !pw) { $("lMsg").textContent = "Isi email dan password."; return; }
-    if (useFb) {
+    if (useSb) {
       $("lMsg").textContent = "Memeriksa…";
-      fbAuth.signInWithEmailAndPassword(em, pw).then(function () {
+      sbClient.auth.signInWithPassword({ email: em, password: pw }).then(function (res) {
+        if (res.error) {
+          var m = (res.error.message || "").toLowerCase();
+          $("lMsg").textContent = /rate|too many/.test(m) ? "Terlalu banyak percobaan. Coba lagi beberapa menit lagi." : "Email atau password salah.";
+          return;
+        }
         $("lMsg").textContent = ""; $("loginForm").reset();
-      }).catch(function (err) {
-        var c = err && err.code;
-        $("lMsg").textContent = c === "auth/network-request-failed" ? "Tidak bisa terhubung ke Firebase. Periksa koneksi internet."
-          : c === "auth/too-many-requests" ? "Terlalu banyak percobaan. Coba lagi beberapa menit lagi."
-          : "Email atau password salah.";
+      }).catch(function () {
+        $("lMsg").textContent = "Tidak bisa terhubung ke Supabase. Periksa koneksi internet.";
       });
       return;
     }
@@ -2282,7 +2326,7 @@ form { display: grid; gap: 14px; }
     $("pwToggle").setAttribute("aria-pressed", show ? "true" : "false");
   });
   $("logout").addEventListener("click", function () {
-    if (useFb) { fbAuth.signOut().then(function () { location.reload(); }); return; }
+    if (useSb) { sbClient.auth.signOut().then(function () { location.reload(); }); return; }
     authed = false;
     try { sessionStorage.removeItem(AUTH_KEY); } catch (err) {}
     if (!$("overlay").hidden) closeOverlay();
@@ -2293,8 +2337,11 @@ form { display: grid; gap: 14px; }
   var clientMatch = /^#\/setuju\/([A-Za-z0-9]{16,64})$/.exec(location.hash || "");
   if (clientMatch) {
     startClient(clientMatch[1]);
-  } else if (useFb) {
-    fbAuth.onAuthStateChanged(function (u) { authed = !!u; authedEmail = u ? (u.email || "") : ""; showAuth(); });
+  } else if (useSb) {
+    sbClient.auth.onAuthStateChange(function (event, session) {
+      authed = !!session; authedEmail = session && session.user ? (session.user.email || "") : "";
+      showAuth();
+    });
   } else {
     showAuth();
   }

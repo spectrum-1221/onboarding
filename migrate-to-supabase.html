@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Migrasi Firebase → Supabase</title>
+<meta name="robots" content="noindex">
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: system-ui, Arial, sans-serif; max-width: 680px; margin: 32px auto; padding: 0 16px; line-height: 1.55; }
+  h1 { font-size: 20px; }
+  .warn { background: #fff3cd; color: #664d03; border: 1px solid #ffe69c; border-radius: 8px; padding: 12px 14px; margin: 14px 0; font-size: 14px; }
+  fieldset { border: 1px solid #ccc; border-radius: 10px; padding: 14px 16px; margin: 14px 0; }
+  legend { font-weight: 700; padding: 0 6px; }
+  label { display: block; font-size: 13px; margin: 10px 0 4px; }
+  input { width: 100%; box-sizing: border-box; padding: 8px 10px; font-size: 14px; border: 1px solid #999; border-radius: 6px; }
+  button { margin-top: 16px; padding: 10px 18px; font-size: 15px; border-radius: 8px; border: 0; background: #1a7a46; color: #fff; cursor: pointer; }
+  button:disabled { opacity: .6; cursor: default; }
+  #log { white-space: pre-wrap; font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; background: #111; color: #d6f5e0; padding: 12px 14px; border-radius: 8px; margin-top: 16px; min-height: 60px; max-height: 50vh; overflow: auto; }
+  .ok { color: #2fbf71; } .err { color: #ff8787; }
+</style>
+</head>
+<body>
+<h1>Migrasi data: Firebase → Supabase</h1>
+<div class="warn">
+  Halaman ini hanya untuk dipakai <strong>sekali, secara lokal</strong> (buka file ini langsung dari komputer, atau
+  jalankan sebentar lewat <code>python -m http.server</code>) oleh Anda sendiri. Jangan di-upload ke hosting publik,
+  dan jangan kirim <strong>Service Role Key</strong> ke siapa pun — key itu diketik di sini hanya untuk sesi ini, tidak
+  disimpan di mana pun, dan memberi akses penuh ke database Supabase (melewati semua aturan keamanan).
+  Setelah migrasi selesai dan Anda sudah memastikan datanya benar, hapus file <code>migrate-to-supabase.html</code> ini
+  dari repo.
+</div>
+
+<form id="f">
+  <fieldset>
+    <legend>1. Login Firebase (sumber data lama)</legend>
+    <label for="fbEmail">Email staf</label>
+    <input id="fbEmail" value="onboarding.zahirtrainer@gmail.com" required>
+    <label for="fbPass">Password</label>
+    <input id="fbPass" type="password" required autocomplete="off">
+  </fieldset>
+  <fieldset>
+    <legend>2. Tujuan Supabase</legend>
+    <label for="sbUrl">Project URL</label>
+    <input id="sbUrl" placeholder="https://xxxxxxxxxxxx.supabase.co" required>
+    <label for="sbKey">Service Role Key (Project Settings &gt; API &gt; service_role)</label>
+    <input id="sbKey" type="password" required autocomplete="off">
+  </fieldset>
+  <button type="submit" id="go">Mulai Migrasi</button>
+</form>
+<div id="log" hidden></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+(function () {
+  // Konfigurasi web app Firebase project lama (zahir-onboardin). Bukan rahasia — sama seperti isi
+  // firebase-config.js yang sebelumnya dipakai index.html.
+  var FIREBASE_CONFIG = {
+    apiKey: "AIzaSyCgOvpM9wZDK_xvXnWcJiSEXtyKXKHXewU",
+    authDomain: "zahir-onboardin.firebaseapp.com",
+    projectId: "zahir-onboardin",
+    storageBucket: "zahir-onboardin.firebasestorage.app",
+    messagingSenderId: "317740179643",
+    appId: "1:317740179643:web:dbec20752ebbaadec9899e",
+    measurementId: "G-0WYMCN2DEE"
+  };
+  var logEl = document.getElementById("log");
+  function log(t, cls) { logEl.hidden = false; var line = document.createElement("div"); if (cls) line.className = cls; line.textContent = t; logEl.appendChild(line); logEl.scrollTop = logEl.scrollHeight; }
+
+  document.getElementById("f").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var go = document.getElementById("go"); go.disabled = true;
+    logEl.innerHTML = ""; logEl.hidden = false;
+    try {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      var fbAuth = firebase.auth(), fbDb = firebase.firestore();
+      log("Masuk ke Firebase…");
+      await fbAuth.signInWithEmailAndPassword(document.getElementById("fbEmail").value.trim(), document.getElementById("fbPass").value);
+      log("Berhasil masuk.", "ok");
+
+      var sb = supabase.createClient(document.getElementById("sbUrl").value.trim(), document.getElementById("sbKey").value.trim());
+
+      async function migrateCollection(fsName, sbTable, idField) {
+        log("Membaca koleksi \\"" + fsName + "\\"…");
+        var snap = await fbDb.collection(fsName).get();
+        var rows = snap.docs.map(function (d) {
+          var row = {}; row[idField] = d.id; row.data = d.data(); return row;
+        });
+        log(fsName + ": " + rows.length + " dokumen ditemukan.");
+        if (!rows.length) return { n: 0 };
+        var batchSize = 200, written = 0;
+        for (var i = 0; i < rows.length; i += batchSize) {
+          var batch = rows.slice(i, i + batchSize);
+          var res = await sb.from(sbTable).upsert(batch, { onConflict: idField });
+          if (res.error) { log("Gagal menulis ke \\"" + sbTable + "\\": " + res.error.message, "err"); throw res.error; }
+          written += batch.length;
+          log("  → " + written + "/" + rows.length + " tersimpan di Supabase \\"" + sbTable + "\\".");
+        }
+        return { n: written };
+      }
+
+      var r1 = await migrateCollection("trainings", "trainings", "id");
+      var r2 = await migrateCollection("beritaAcaras", "beritaAcaras", "id");
+      var r3 = await migrateCollection("baShare", "baShare", "id");
+
+      log("", null);
+      log("Selesai: " + r1.n + " jadwal training, " + r2.n + " Berita Acara, " + r3.n + " link persetujuan klien dipindahkan.", "ok");
+      log("Langkah berikutnya: isi supabase-config.js dengan URL dan anon key project ini, lalu buka index.html untuk memastikan datanya muncul.");
+    } catch (err) {
+      log("Gagal: " + (err && err.message ? err.message : err), "err");
+    } finally {
+      go.disabled = false;
+    }
+  });
+})();
+</script>
+</body>
+</html>
