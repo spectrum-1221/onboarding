@@ -106,4 +106,15 @@ grant execute on function mark_ba_share_viewed(text) to anon, authenticated;
 -- Supaya layar yang terbuka ikut update otomatis saat ada perubahan (seperti Firestore onSnapshot).
 -- "baShare" aman ikut disiarkan: anon/publik tetap tidak punya izin SELECT di tabel ini (lihat RLS
 -- di atas), jadi perubahan hanya diterima oleh sesi staf yang sudah login.
-alter publication supabase_realtime add table "trainings", "beritaAcaras", "baShare";
+do $$
+begin
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'trainings') then
+    alter publication supabase_realtime add table "trainings";
+  end if;
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'beritaAcaras') then
+    alter publication supabase_realtime add table "beritaAcaras";
+  end if;
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'baShare') then
+    alter publication supabase_realtime add table "baShare";
+  end if;
+end $$;
