@@ -1358,6 +1358,19 @@ form { display: grid; gap: 14px; }
   }
   var toastT = null;
   function toast(text) { $("toast").textContent = text; $("toast").hidden = false; clearTimeout(toastT); toastT = setTimeout(function () { $("toast").hidden = true; }, 2400); }
+  function askNotifPermission() {
+    try { if (window.Notification && Notification.permission === "default") Notification.requestPermission(); } catch (e) {}
+  }
+  function notifyApproved(b) {
+    try {
+      if (!window.Notification || Notification.permission !== "granted") return;
+      var n = new Notification("Berita Acara disetujui", {
+        body: (b.nomorBA || b.jenisKegiatan || "") + " — " + (b.perusahaan || "") + (b.approvedBy ? "\nDisetujui oleh " + b.approvedBy : ""),
+        tag: "ba-" + b.id
+      });
+      n.onclick = function () { window.focus(); location.hash = "#ba"; n.close(); };
+    } catch (e) {}
+  }
   function setMsg(t) { $("msg").textContent = t; }
   function resetForm() {
     $("form").reset();
@@ -2005,7 +2018,7 @@ form { display: grid; gap: 14px; }
       if (!patch) return;
       baState.syncing[b.id] = 1;
       persistBA(Object.assign({}, b, patch))
-        .then(function () { if (justApproved) toast("BA " + (b.nomorBA || "") + " disetujui klien"); })
+        .then(function () { if (justApproved) { toast("BA " + (b.nomorBA || "") + " disetujui klien"); notifyApproved(Object.assign({}, b, patch)); } })
         .catch(function () {})
         .then(function () { delete baState.syncing[b.id]; });
     });
@@ -2369,7 +2382,7 @@ form { display: grid; gap: 14px; }
     $("login").hidden = authed;
     if (authed) {
       $("who").textContent = authedEmail;
-      if (!started) { started = true; init(); }
+      if (!started) { started = true; init(); askNotifPermission(); }
     } else {
       setTimeout(function () { $("lEmail").focus(); }, 0);
     }
