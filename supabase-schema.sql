@@ -90,6 +90,19 @@ end;
 $$;
 grant execute on function approve_ba_share(text, text) to anon, authenticated;
 
+-- Dipanggil sekali oleh halaman klien saat dokumen pertama kali dibuka, untuk mengisi "Dilihat Klien"
+-- di riwayat status. Diam-diam tidak melakukan apa pun kalau sudah pernah dilihat atau sudah disetujui.
+create or replace function mark_ba_share_viewed(p_token text)
+returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  update "baShare"
+  set data = data || jsonb_build_object('viewedAt', to_char(now() at time zone 'utc', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'))
+  where id = p_token and data ->> 'status' = 'sent' and (data ->> 'viewedAt') is null;
+end;
+$$;
+grant execute on function mark_ba_share_viewed(text) to anon, authenticated;
+
 -- Supaya layar yang terbuka ikut update otomatis saat ada perubahan (seperti Firestore onSnapshot).
 -- "baShare" aman ikut disiarkan: anon/publik tetap tidak punya izin SELECT di tabel ini (lihat RLS
 -- di atas), jadi perubahan hanya diterima oleh sesi staf yang sudah login.
