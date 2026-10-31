@@ -1440,9 +1440,11 @@ form { display: grid; gap: 14px; }
       if (sbDb && rec.shareToken) {
         /* salinan untuk halaman klien; ditulis lebih dulu agar status tidak balik dari sinkronisasi */
         var sc = Object.assign({}, data); sc.status = rec.status === "approved" ? "approved" : (rec.status === "sent" ? "sent" : "draft");
-        await sbDb.collection("baShare").doc(rec.shareToken).set(sc);
+        var rShare = await sbDb.collection("baShare").doc(rec.shareToken).set(sc);
+        if (rShare && rShare.error) { console.error("baShare set gagal:", rShare.error); throw rShare.error; }
       }
-      await baBackend.col.doc(rec.id).set(data);
+      var rMain = await baBackend.col.doc(rec.id).set(data);
+      if (rMain && rMain.error) { console.error("beritaAcaras set gagal:", rMain.error); throw rMain.error; }
     } else {
       var i = baState.items.findIndex(function (x) { return x.id === rec.id; });
       if (i >= 0) baState.items[i] = rec; else baState.items.push(rec);
@@ -2065,8 +2067,9 @@ form { display: grid; gap: 14px; }
         if (b.status === "sent" && !b.viewedAt) sbClient.rpc("mark_ba_share_viewed", { p_token: token }).catch(function () {});
         if (b.status !== lastStatus) { lastStatus = b.status; render2(b); }
         if (b.status !== "approved") timer = setTimeout(load, 4000);
-      }).catch(function () {
+      }).catch(function (err) {
         if (stopped) return;
+        console.error("get_ba_share gagal:", err);
         if (lastStatus === null) msg("Dokumen tidak dapat dibuka. Periksa koneksi internet atau hubungi petugas Zahir.");
         timer = setTimeout(load, 6000);
       });
@@ -2331,25 +2334,27 @@ form { display: grid; gap: 14px; }
   var AUTH_KEY = "jt-auth";
   var authed = false, started = false, authedEmail = AUTH_EMAIL;
   /* Bila supabase-config.js diisi dan pustaka Supabase termuat, login memakai Supabase Auth dan data memakai Supabase. */
-  function sbCollection(sb, table) {
+  function sbCollection(sb, table, keyCol) {
+    keyCol = keyCol || "id";
     function fetchAll(cb, errCb) {
-      sb.from(table).select("id,data").then(function (res) {
+      sb.from(table).select(keyCol + ",data").then(function (res) {
         if (res.error) { if (errCb) errCb(res.error); return; }
-        var docs = (res.data || []).map(function (r) { return { id: r.id, data: function () { return r.data; }, exists: true }; });
+        var docs = (res.data || []).map(function (r) { return { id: r[keyCol], data: function () { return r.data; }, exists: true }; });
         cb({ docs: docs });
       }, function (e) { if (errCb) errCb(e); });
     }
     return {
       doc: function (id) {
         return {
-          set: function (data) { return sb.from(table).upsert({ id: id, data: data }); },
+          set: function (data) { var row = {}; row[keyCol] = id; row.data = data; return sb.from(table).upsert(row); },
           update: function (patch) {
-            return sb.from(table).select("data").eq("id", id).single().then(function (res) {
+            return sb.from(table).select("data").eq(keyCol, id).single().then(function (res) {
               var merged = Object.assign({}, (res.data && res.data.data) || {}, patch);
-              return sb.from(table).upsert({ id: id, data: merged });
+              var row = {}; row[keyCol] = id; row.data = merged;
+              return sb.from(table).upsert(row);
             });
           },
-          delete: function () { return sb.from(table).delete().eq("id", id); }
+          delete: function () { return sb.from(table).delete().eq(keyCol, id); }
         };
       },
       onSnapshot: function (cb, errCb) {
@@ -2362,7 +2367,8 @@ form { display: grid; gap: 14px; }
   try {
     if (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.url && window.SUPABASE_CONFIG.anonKey && window.supabase) {
       sbClient = window.supabase.createClient(window.SUPABASE_CONFIG.url, window.SUPABASE_CONFIG.anonKey);
-      sbDb = { collection: function (table) { return sbCollection(sbClient, table); } };
+      /* "baShare" pakai kolom "token" sebagai primary key (bukan "id" seperti tabel lain) */
+      sbDb = { collection: function (table) { return sbCollection(sbClient, table, table === "baShare" ? "token" : "id"); } };
       useSb = true;
     }
   } catch (e) { useSb = false; sbClient = null; sbDb = null; }
