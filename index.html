@@ -2065,7 +2065,7 @@ form { display: grid; gap: 14px; }
         if (res.error || !res.data || !res.data.length) { msg("Link tidak valid atau sudah tidak berlaku."); return; }
         var row = res.data[0], b = row.data;
         try {
-          if (b.status === "sent" && !b.viewedAt) sbClient.rpc("mark_ba_share_viewed", { p_token: token }).catch(function () {});
+          if (b.status === "sent" && !b.viewedAt) sbClient.rpc("mark_ba_share_viewed", { p_token: token }).then(function () {}, function () {});
           if (b.status !== lastStatus) { lastStatus = b.status; render2(b); }
         } catch (renderErr) {
           console.error("Gagal menampilkan dokumen (render2):", renderErr);
