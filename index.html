@@ -2367,8 +2367,7 @@ form { display: grid; gap: 14px; }
   try {
     if (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.url && window.SUPABASE_CONFIG.anonKey && window.supabase) {
       sbClient = window.supabase.createClient(window.SUPABASE_CONFIG.url, window.SUPABASE_CONFIG.anonKey);
-      /* "baShare" pakai kolom "token" sebagai primary key (bukan "id" seperti tabel lain) */
-      sbDb = { collection: function (table) { return sbCollection(sbClient, table, table === "baShare" ? "token" : "id"); } };
+      sbDb = { collection: function (table) { return sbCollection(sbClient, table); } };
       useSb = true;
     }
   } catch (e) { useSb = false; sbClient = null; sbDb = null; }
